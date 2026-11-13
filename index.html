@@ -165,6 +165,7 @@ function migrate(o){
 }
 async function load(){
   try{
+    if(typeof claude==="undefined") throw 0;
     const u=await claude.use("user"); db=await claude.use("db");
     if(u&&db){userId=await u.id();
       const snap=await Promise.race([db.collection("data/users/"+userId).doc("juego").get(),new Promise(r=>setTimeout(()=>r(null),8000))]);
@@ -178,8 +179,13 @@ async function load(){
 
 // ---------- IA ----------
 async function ai(prompt){
-  if(!sample) throw {code:"no_ai"};
-  return await sample.json(prompt,{modelTier:"quick",cache:false});
+  if(sample) return await sample.json(prompt,{modelTier:"quick",cache:false});
+  if(typeof claude!=="undefined") throw {code:"no_ai"};
+  // Fuera de claude.ai: backend propio (server.js)
+  let r; try{r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})})}catch(e){throw {code:"no_ai"}}
+  if(r.status===429) throw {code:"rate_limited"};
+  if(!r.ok) throw {code:"no_ai"};
+  return await r.json();
 }
 function aiError(e){
   if(e&&e.code==="rate_limited") toast("Muchas acciones seguidas. Espera un momento y vuelve a intentar.");
@@ -241,7 +247,7 @@ function renderSetup(){
   setup=setup||{paso:1,escenario:null,custom:"",fandoms:[],locura:2,cands:null,primero:null};
   if(setup.paso===1){
     main.innerHTML=`<div class="card"><h2>Sé quien quieras</h2><p class="muted">Escoge un escenario. Tus seguidores serán personajes con IA que reaccionan a todo lo que haces. Sin energía, sin gemas, sin anuncios, sin suscripción.</p>
-    ${sample?"":`<div class="notice">Para que los personajes hablen, esta página te pedirá permiso para usar a Claude.</div>`}
+    ${sample||typeof claude==="undefined"?"":`<div class="notice">Para que los personajes hablen, esta página te pedirá permiso para usar a Claude.</div>`}
     ${ESCENARIOS.map((e,i)=>`<div class="pick${setup.escenario===e[1]?" on":""}" data-i="${i}"><b>${e[0]} ${e[1]}</b><div class="muted">${e[2]}</div></div>`).join("")}
     <label>O inventa el tuyo</label><input id="cu" maxlength="120" placeholder="Ej. Soy un pirata del Caribe con un podcast" value="${esc(setup.custom)}">
     <div style="margin-top:12px"><button class="btn" id="nx">Siguiente</button></div></div>`;
@@ -506,7 +512,7 @@ function renderProfile(){
 nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(busy)return;view=b.dataset.v;if(view!=="mensajes")openChat=null;render();window.scrollTo(0,0)});
 
 (async()=>{
-  claude.use("sample").then(s=>{sample=s;if(!S)render()}).catch(()=>{});
+  if(typeof claude!=="undefined") claude.use("sample").then(s=>{sample=s;if(!S)render()}).catch(()=>{});
   S=await load(); render();
 })();
 })();
