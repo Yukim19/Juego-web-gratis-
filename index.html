@@ -137,6 +137,7 @@ function nextToast(){const t=toastQ.shift();if(!t){toastOn=false;return}toastOn=
   const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);
   setTimeout(()=>{d.remove();nextToast()},toastQ.length?1800:3000)}
 const charById=id=>S.chars.find(c=>c.id===id);
+const uh=u=>esc(String(u||"").replace(/^@+/,""));
 const nivel=()=>Math.floor(Math.sqrt((S.stats.xp||0)/40))+1;
 const relTxt=a=>a>=85?"💞":a>=65?"😊":a>=40?"🙂":a>=20?"😬":"😤";
 
@@ -292,7 +293,7 @@ Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea",
   }
   // paso 3: elegir primer seguidor
   main.innerHTML=`<div class="card"><h2>¿Quién es tu primer seguidor?</h2><p class="muted">Será tu persona más cercana al empezar. Los demás también te seguirán.</p>
-  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${esc(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
+  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${uh(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
   <div class="row" style="margin-top:12px"><button class="btn alt" id="bk">Atrás</button><button class="btn" id="go">Entrar a fama</button></div>
   <div class="typing hidden" id="wait">Preparando tu primer post…</div></div>`;
   main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.primero=p.dataset.id;main.querySelectorAll(".pick").forEach(x=>x.classList.toggle("on",x===p))});
@@ -322,12 +323,12 @@ Responde SOLO JSON: {"post":"","comentarios":[{"id":"","texto":""}],"likes":ente
 // ---------- feed ----------
 function postHTML(p){
   if(p.tipo==="npc"){const a=p.autor;
-    return `<div class="card post"><div class="row">${av(a.nombre,a.news?"#118ab2":"#555")}<div><div class="name">${esc(a.nombre)}${a.news?'<span class="badge news">📰 noticias</span>':""}</div><div class="handle">@${esc(a.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+    return `<div class="card post"><div class="row">${av(a.nombre,a.news?"#118ab2":"#555")}<div><div class="name">${esc(a.nombre)}${a.news?'<span class="badge news">📰 noticias</span>':""}</div><div class="handle">@${uh(a.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   if(p.tipo==="char"){const c=charById(p.cid)||{nombre:"?",usuario:"?",color:"#555"};
-    return `<div class="card post"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${esc(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+    return `<div class="card post"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${uh(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   const con=p.con&&charById(p.con);
   const reps=(p.replies||[]).map(r=>{const c=charById(r.cid)||{nombre:r.nombre||"Alguien",usuario:r.usuario||"anon",color:"#555"};
-    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${esc(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
+    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${uh(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
   const ds=p.delta?[p.delta.humor?`😂 ${p.delta.humor>0?"+":""}${p.delta.humor}`:"",p.delta.aura?`✨ ${p.delta.aura>0?"+":""}${p.delta.aura}`:"",p.delta.drama?`🌶️ ${p.delta.drama>0?"+":""}${p.delta.drama}`:""].filter(Boolean).join(" · "):"";
   return `<div class="card post"><div class="row">${av(S.yo.name,"#ff5c8a")}<div><div class="name">${esc(S.yo.name)}${p.viral?'<span class="badge viral">🔥 viral</span>':""}${con?`<span class="badge with">con ${esc(con.nombre)}</span>`:""}</div><div class="handle">@${esc(S.yo.handle)}</div></div></div>
   <div class="body">${esc(p.texto)}</div>
@@ -391,7 +392,7 @@ Responde SOLO JSON: {"comentarios":[{"id":"id o vacío","nombre":"si es NPC","us
 function renderFollowers(){
   const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
   main.innerHTML=`<h2>Tus personajes</h2><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>`+
-  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${esc(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
   <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
@@ -415,7 +416,7 @@ function renderMessages(){
     return;
   }
   const c=charById(openChat); const msgs=S.chats[c.id]||[]; S.unread[c.id]=0; header(); save();
-  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${esc(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
+  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
   <div class="card"><div class="dm" id="dm">${msgs.map(m=>`<div class="msg ${m.yo?"me":"them"}">${esc(m.texto)}</div>`).join("")||`<p class="muted">Empieza la conversación con ${esc(c.nombre)}.</p>`}<div class="typing hidden" id="tp">${esc(c.nombre)} está escribiendo…</div></div>
   <div class="row" style="margin-top:10px"><input id="mi" maxlength="300" placeholder="Escribe un mensaje…"><button class="btn" id="snd">Enviar</button></div></div>`;
   const dm=$("dm"); dm.scrollTop=dm.scrollHeight;
