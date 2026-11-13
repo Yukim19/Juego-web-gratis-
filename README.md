@@ -15,7 +15,14 @@ Creas tu persona, escoges un escenario, publicas, ganas seguidores, haces planes
 - `tests/test_ui.py`: prueba automática con la IA simulada
 
 ## Correrlo fuera de claude.ai
-Necesitas Node 18+. Abre http://localhost:3000 después de arrancar el servidor. Hay dos modos de IA:
+Necesitas Node 18+. Abre http://localhost:3000 después de arrancar el servidor. Hay tres modos de IA:
+
+**Gratis con Gemini (funciona en cualquier servidor)**
+Saca una clave gratis en https://aistudio.google.com/apikey (la cuota gratis alcanza para un jugador).
+```
+GEMINI_API_KEY=... node server.js
+```
+Modelo por defecto: `gemini-2.5-flash` (cámbialo con `FAMA_MODEL`).
 
 **Con tu suscripción de Claude (sin clave de API, sin costo extra)**
 Requiere tener Claude Code instalado y con sesión iniciada en esa computadora.
@@ -28,7 +35,7 @@ Usa el comando `claude -p` (modelo `haiku`), una petición a la vez, y gasta de 
 ```
 ANTHROPIC_API_KEY=sk-ant-... node server.js
 ```
-Variables opcionales: `PORT`, `FAMA_MODEL`, `FAMA_BACKEND=api|cli` (por defecto: `api` si hay clave, si no `cli`).
+Variables opcionales: `PORT`, `FAMA_MODEL`, `FAMA_BACKEND=gemini|api|cli` (por defecto: `gemini` si hay `GEMINI_API_KEY`, luego `api` si hay clave de Anthropic, si no `cli`).
 
 El servidor reenvía los prompts, así la clave nunca llega al navegador. Límite: 20 peticiones/minuto por IP. La partida se guarda en `localStorage`.
 Dentro de claude.ai el juego sigue usando el runtime del artifact.
