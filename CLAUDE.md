@@ -32,13 +32,18 @@ Está publicado como un artifact de claude.ai. Las funciones de IA y de guardado
 - Planes: agendar o hacer actividades con un personaje. La IA narra lo que pasó y el personaje publica sobre el plan.
 - 14 logros. El estado viejo de v1 se migra solo con `migrate()`.
 
+- **Plantillas de mundo** (Perfil → 🌎 Plantillas): título, portada (imagen/emoji), fandom, descripción, **meta** y hasta 8 personajes originales. "Jugar este mundo" cambia el escenario, pone la meta y suma los personajes. La IA devuelve `progresoMeta` (-10..25) en posts y planes; al llegar a 100 la meta se cumple (+200 XP, logro).
+- Personajes personalizados (crear/editar/borrar, emoji, color, autocompletar con IA) y edición de perfil/escenario.
+- Fuera de claude.ai: `server.js` (modos Gemini, API de Claude o CLI de Claude Code; ver README).
+
 ### Estructura del estado `S`
 ```
 {v:2, yo:{name,handle,bio,fandoms[],escenario,locura},
  chars:[{id,nombre,usuario,bio,personalidad,fama,color,afinidad,relacion,memoria[]}],
  feed:[{tipo:"mio"|"npc"|"char", ...}], chats:{[cid]:[{yo,texto}]}, unread:{[cid]:n},
  planes:[{id,cid,actividad,estado:"pendiente"|"hecho",resultado}],
- stats:{seguidores,xp,humor,aura,drama,likesTot,noticias}, logros:[], cancelado}
+ stats:{seguidores,xp,humor,aura,drama,likesTot,noticias}, logros:[], cancelado,
+ plantillas:[{id,titulo,fandom,descripcion,meta,portada,emoji,color,personajes[]}], meta:{texto,progreso,cumplida,titulo}|null}
 ```
 
 ## Pruebas
