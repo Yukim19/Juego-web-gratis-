@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>fama – red social con personajes IA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff5c8a%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237c5cff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%229%22%20fill%3D%22url%28%23g%29%22/%3E%3Cpath%20d%3D%22M16%205c1%205.5%205.5%2010%2011%2011-5.5%201-10%205.5-11%2011-1-5.5-5.5-10-11-11%205.5-1%2010-5.5%2011-11z%22%20fill%3D%22%23fff%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0d14;--panel:#1a1722;--panel2:#231f2e;--line:#2f2a3d;--txt:#f2eef9;--muted:#9a93ab;--accent:#ff5c8a;--accent2:#7c5cff;--ok:#3ddc97;--warn:#ffb547;--bad:#ff4d4d}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;font-size:15px}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:rgba(15,13,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.logo{font-family:"Space Grotesk";font-weight:700;font-size:22px;letter-spacing:-.5px}
+.logo .wm{color:var(--txt)}.logo i{font-style:normal;color:var(--accent)}.logo .mark{display:block}
+.hstats{margin-left:auto;display:flex;gap:10px;font-size:12px;color:var(--muted)}
+.hstats b{color:var(--txt)}
+main{flex:1;padding:12px 14px 96px}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav .in{display:flex;max-width:560px;width:100%}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 0;font:600 11px Inter;cursor:pointer;position:relative}
+nav button.on{color:var(--accent)}
+nav button b{display:block;font-size:19px;margin-bottom:2px}
+nav .dot{position:absolute;top:6px;right:calc(50% - 18px);background:var(--accent);color:#fff;border-radius:99px;font-size:10px;padding:1px 5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{font-family:"Space Grotesk";margin:4px 0 10px;font-size:20px}
+h3{font-family:"Space Grotesk";margin:0 0 8px;font-size:16px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font:inherit}
+input[type=range]{padding:0;accent-color:var(--accent)}
+textarea{resize:vertical;min-height:70px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:600 14px Inter;cursor:pointer;white-space:nowrap}
+.btn.alt{background:var(--panel2);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;font-size:18px;color:#fff}
+.av.s{width:28px;height:28px;font-size:13px}
+.name{font-weight:600}
+.handle{color:var(--muted);font-size:13px}
+.post .body{margin:8px 0 6px;line-height:1.45;white-space:pre-wrap}
+.meta{display:flex;gap:14px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.badge{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:600;margin-left:6px;vertical-align:middle}
+.viral{background:#3a1f2b;color:var(--accent)}
+.news{background:#1f2b3a;color:#4cc9f0}
+.with{background:#2a2340;color:#b9a6ff}
+.reply{border-left:2px solid var(--line);margin:10px 0 0 18px;padding-left:10px}
+.reply .body{margin:4px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{background:var(--panel2);border-radius:12px;padding:10px 4px}
+.stats b{display:block;font-size:20px;font-family:"Space Grotesk"}
+.stats span{font-size:11px;color:var(--muted)}
+.bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;border-radius:99px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:6px 10px;font-size:13px;cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.muted{color:var(--muted);font-size:13px}
+.dm{display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow:auto;padding:4px}
+.msg{max-width:80%;padding:8px 12px;border-radius:14px;line-height:1.4;white-space:pre-wrap}
+.msg.me{align-self:flex-end;background:var(--accent2)}
+.msg.them{align-self:flex-start;background:var(--panel2)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-size:13px;z-index:20;max-width:90%;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.typing{color:var(--muted);font-style:italic;font-size:13px;margin-top:6px}
+.notice{background:#2b2333;border:1px solid #4a3b5c;border-radius:12px;padding:10px;font-size:13px;color:#d9cdee;margin:8px 0}
+.cancel{background:#3a1818;border:1px solid #6b2a2a;color:#ffc9c9}
+.pick{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;cursor:pointer}
+.pick.on{border-color:var(--accent);background:#2a1a24}
+.story{white-space:pre-wrap;line-height:1.5;background:var(--panel2);border-radius:12px;padding:10px;margin-top:8px}
+.logro{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.logro:last-child{border:0}
+.logro.off{opacity:.35}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><div class="logo row" style="gap:8px"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c8a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#fg)"/><path d="M16 5c1 5.5 5.5 10 11 11-5.5 1-10 5.5-11 11-1-5.5-5.5-10-11-11 5.5-1 10-5.5 11-11z" fill="#fff"/><circle cx="25" cy="7" r="1.8" fill="#fff" opacity=".85"/></svg><span class="wm">fama<i>.</i></span></div><div class="hstats" id="hs"></div></header>
+  <main id="main"><div class="card muted">Cargando…</div></main>
+  <nav id="nav" class="hidden"><div class="in">
+    <button data-v="feed" class="on"><b>🏠</b>Inicio</button>
+    <button data-v="seguidores"><b>👥</b>Seguidores</button>
+    <button data-v="mensajes"><b>💬</b>Mensajes</button>
+    <button data-v="planes"><b>📅</b>Planes</button>
+    <button data-v="perfil"><b>⭐</b>Perfil</button>
+  </div></nav>
+</div>
+<script>
+(() => {
+const COLORS=["#ff5c8a","#7c5cff","#3ddc97","#ffb547","#4cc9f0","#f72585","#b5179e","#06d6a0","#ef476f","#118ab2","#e76f51","#8ac926"];
+const FANDOMS=["Series BL tailandesas","Anime","K-pop","Videojuegos","Fútbol","Reguetón y música urbana","Superhéroes","Moda y belleza","Tecnología","Libros y fantasía","Novelas y drama","Deportes"];
+const ESCENARIOS=[
+ ["🎤","Estrella pop","Eres una estrella de la música en plena gira mundial"],
+ ["😈","Villano de anime","Eres el villano más temido (y más querido) de tu anime"],
+ ["🌴","Influencer boricua","Eres influencer en Puerto Rico y quieres pegar en todo Latinoamérica"],
+ ["🎬","Actor de series BL","Acabas de protagonizar una serie que se hizo viral"],
+ ["🎮","Streamer gamer","Haces streams y tu chat es un caos"],
+ ["📚","Universitario normal","Eres un estudiante común… hasta que un post tuyo explota"],
+ ["👨‍🍳","Chef famoso","Tu cocina es famosa y tus reseñas causan drama"],
+ ["🦸","Superhéroe secreto","Nadie sabe tu identidad secreta… todavía"],
+ ["👑","Realeza","Eres príncipe o princesa de un reino ficticio y la prensa te persigue"],
+ ["🕵️","Detective","Resuelves misterios y publicas pistas en tiempo real"]];
+const RELACIONES=["amigos","mejores amigos","rivales","mentor","compañeros de equipo","familia","fan número 1","némesis"];
+const ACTIVIDADES=["Ir a la playa","Grabar un TikTok juntos","Ir a un concierto","Estudiar juntos","Hacer un live","Cocinar juntos","Ir de compras","Jugar videojuegos","Viaje de fin de semana","Colaboración en un post"];
+const LOCURA=["Realista","Un poco loco","Dramático","Caótico","Locura total"];
+const LOGROS=[
+ ["primer","📝","Primer post","Publica por primera vez"],
+ ["s100","🌱","100 seguidores","Llega a 100 seguidores"],
+ ["s1k","📈","1K seguidores","Llega a 1,000 seguidores"],
+ ["s10k","⭐","10K seguidores","Llega a 10,000 seguidores"],
+ ["s100k","🌟","100K seguidores","Llega a 100,000 seguidores"],
+ ["s1m","👑","Millonario","Llega a 1 millón de seguidores"],
+ ["s1b","🌌","El más famoso del universo","Llega a mil millones de seguidores"],
+ ["viral","🔥","Viral","Haz un post viral"],
+ ["bff","💞","Mejor amigo","Llega a 85 de afinidad con alguien"],
+ ["cancel","🧯","Sobreviviente","Recupérate de una cancelación"],
+ ["planes5","📅","Agenda llena","Completa 5 planes"],
+ ["chismoso","📰","En las noticias","Que 10 cuentas publiquen sobre ti"],
+ ["gracioso","😂","Comediante","Llega a 100 de humor"],
+ ["aura","✨","Aura máxima","Llega a 100 de aura"]];
+
+let S=null, view="feed", openChat=null, busy=false, sample=null, db=null, userId=null, setup=null;
+const main=document.getElementById("main"), nav=document.getElementById("nav");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>{n=Math.round(n||0);return n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(n)};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const num=(v,d=0)=>Number.isFinite(+v)?+v:d;
+const av=(n,c,s)=>`<div class="av${s?" s":""}" style="background:${c}">${esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let toastQ=[],toastOn=false;
+function toast(t){toastQ.push(t);if(!toastOn)nextToast()}
+function nextToast(){const t=toastQ.shift();if(!t){toastOn=false;return}toastOn=true;
+  const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);
+  setTimeout(()=>{d.remove();nextToast()},toastQ.length?1800:3000)}
+const charById=id=>S.chars.find(c=>c.id===id);
+const nivel=()=>Math.floor(Math.sqrt((S.stats.xp||0)/40))+1;
+const relTxt=a=>a>=85?"💞":a>=65?"😊":a>=40?"🙂":a>=20?"😬":"😤";
+
+// ---------- guardar / cargar ----------
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    S.feed=S.feed.slice(0,60);
+    for(const k in S.chats) S.chats[k]=S.chats[k].slice(-40);
+    S.chars.forEach(c=>c.memoria=(c.memoria||[]).slice(-8));
+    S.planes=S.planes.slice(-30);
+    const data=JSON.stringify(S);
+    try{localStorage.setItem("estado_juego_v2",data)}catch(e){}
+    if(db&&userId){try{await db.collection("data/users/"+userId).doc("juego").set({json:data,t:Date.now()})}catch(e){}}
+  },400);
+}
+function migrate(o){
+  if(!o||!o.yo) return null;
+  if(o.v===2) return o;
+  // v1 -> v2
+  return {v:2,yo:{...o.yo,escenario:"Universitario normal",locura:2},
+    chars:(o.chars||[]).map(c=>({...c,relacion:"amigos",memoria:[]})),
+    feed:(o.posts||[]).map(p=>({...p,tipo:"mio",t:p.id})),chats:o.chats||{},unread:{},planes:[],
+    stats:{seguidores:o.seguidores||0,xp:o.clout||0,humor:10,aura:10,drama:0,likesTot:o.likesTot||0,noticias:0},logros:[],cancelado:false};
+}
+async function load(){
+  try{
+    const u=await claude.use("user"); db=await claude.use("db");
+    if(u&&db){userId=await u.id();
+      const snap=await Promise.race([db.collection("data/users/"+userId).doc("juego").get(),new Promise(r=>setTimeout(()=>r(null),8000))]);
+      const d=snap&&(snap.data?snap.data():snap);
+      if(d&&d.json) return migrate(JSON.parse(d.json));
+    }
+  }catch(e){}
+  try{const l=localStorage.getItem("estado_juego_v2")||localStorage.getItem("estado_juego"); if(l) return migrate(JSON.parse(l))}catch(e){}
+  return null;
+}
+
+// ---------- IA ----------
+async function ai(prompt){
+  if(!sample) throw {code:"no_ai"};
+  return await sample.json(prompt,{modelTier:"quick",cache:false});
+}
+function aiError(e){
+  if(e&&e.code==="rate_limited") toast("Muchas acciones seguidas. Espera un momento y vuelve a intentar.");
+  else if(e&&(e.code==="not_granted"||e.code==="no_ai")) toast("Permite que la página use a Claude para que los personajes cobren vida.");
+  else toast("Los personajes no pudieron responder. Intenta otra vez.");
+}
+function mundo(){
+  const y=S.yo;
+  return `Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni romántico explícito, sin personas reales ni personajes con derechos de autor: todo es ficticio y original).
+Jugador: ${y.name} (@${y.handle}). Bio: "${y.bio}". Escenario: ${y.escenario}. Fandoms: ${y.fandoms.join(", ")}. Nivel de locura del mundo: ${LOCURA[y.locura-1]} (${y.locura}/5).
+Stats: ${fmt(S.stats.seguidores)} seguidores, nivel ${nivel()}, humor ${S.stats.humor}/100, aura ${S.stats.aura}/100, drama ${S.stats.drama}/100${S.cancelado?". ¡ESTÁ CANCELADO! La gente está molesta con él/ella.":""}.`;
+}
+function charLine(c){return `- id:${c.id} | ${c.nombre} (@${c.usuario}) | ${c.personalidad} | relación: ${c.relacion} | afinidad ${c.afinidad}/100${c.memoria?.length?` | recuerda: ${c.memoria.slice(-4).join("; ")}`:""}`}
+function addMemoria(id,txt){const c=charById(id);if(c&&txt){c.memoria=c.memoria||[];c.memoria.push(String(txt).slice(0,140))}}
+function addNPCPosts(list){
+  (list||[]).slice(0,3).forEach(n=>{if(!n||!n.texto)return;
+    S.feed.unshift({tipo:"npc",t:Date.now(),autor:{nombre:n.nombre||"Anónimo",usuario:(n.usuario||"anon").replace(/^@/,""),news:!!n.esNoticia},texto:n.texto,likes:Math.max(0,num(n.likes,Math.round(S.stats.seguidores*.02)))});
+    if(n.esNoticia) S.stats.noticias=(S.stats.noticias||0)+1;
+  });
+}
+function newChar(n,i,af=50){return {id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
+function checkLogros(){
+  const s=S.stats,has=k=>S.logros.includes(k),add=k=>{if(!has(k)){S.logros.push(k);const l=LOGROS.find(x=>x[0]===k);toast(`🏆 Logro: ${l[2]}`)}};
+  if(S.feed.some(p=>p.tipo==="mio"&&!p.auto))add("primer");
+  [[100,"s100"],[1e3,"s1k"],[1e4,"s10k"],[1e5,"s100k"],[1e6,"s1m"],[1e9,"s1b"]].forEach(([n,k])=>{if(s.seguidores>=n)add(k)});
+  if(S.feed.some(p=>p.viral))add("viral");
+  if(S.chars.some(c=>c.afinidad>=85))add("bff");
+  if(S.planes.filter(p=>p.estado==="hecho").length>=5)add("planes5");
+  if((s.noticias||0)>=10)add("chismoso");
+  if(s.humor>=100)add("gracioso");
+  if(s.aura>=100)add("aura");
+}
+function applyStats(r){
+  const s=S.stats;
+  s.humor=clamp(s.humor+num(r.humor),0,100);
+  s.aura=clamp(s.aura+num(r.aura),0,100);
+  s.drama=clamp(s.drama+num(r.drama),0,100);
+  if(!S.cancelado&&s.drama>=100){
+    S.cancelado=true; const perdidos=Math.round(s.seguidores*.2); s.seguidores-=perdidos; s.drama=70;
+    toast(`🚫 ¡Te cancelaron! Perdiste ${fmt(perdidos)} seguidores. Publica algo para recuperarte.`);
+  }
+}
+
+// ---------- render ----------
+function header(){
+  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span>`;
+  const unread=S?Object.values(S.unread||{}).reduce((a,b)=>a+b,0):0;
+  nav.querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.v===view);
+    b.querySelector(".dot")?.remove(); if(b.dataset.v==="mensajes"&&unread){const d=document.createElement("span");d.className="dot";d.textContent=unread;b.appendChild(d)}});
+}
+function render(){
+  nav.classList.toggle("hidden",!S); header();
+  if(!S) return renderSetup();
+  ({feed:renderFeed,seguidores:renderFollowers,mensajes:renderMessages,planes:renderPlanes,perfil:renderProfile})[view]();
+}
+
+// ---------- setup ----------
+function renderSetup(){
+  setup=setup||{paso:1,escenario:null,custom:"",fandoms:[],locura:2,cands:null,primero:null};
+  if(setup.paso===1){
+    main.innerHTML=`<div class="card"><h2>Sé quien quieras</h2><p class="muted">Escoge un escenario. Tus seguidores serán personajes con IA que reaccionan a todo lo que haces. Sin energía, sin gemas, sin anuncios, sin suscripción.</p>
+    ${sample?"":`<div class="notice">Para que los personajes hablen, esta página te pedirá permiso para usar a Claude.</div>`}
+    ${ESCENARIOS.map((e,i)=>`<div class="pick${setup.escenario===e[1]?" on":""}" data-i="${i}"><b>${e[0]} ${e[1]}</b><div class="muted">${e[2]}</div></div>`).join("")}
+    <label>O inventa el tuyo</label><input id="cu" maxlength="120" placeholder="Ej. Soy un pirata del Caribe con un podcast" value="${esc(setup.custom)}">
+    <div style="margin-top:12px"><button class="btn" id="nx">Siguiente</button></div></div>`;
+    main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.escenario=ESCENARIOS[p.dataset.i][1];setup.custom="";render()});
+    $("cu").oninput=e=>{setup.custom=e.target.value;if(e.target.value){setup.escenario=null;main.querySelectorAll(".pick").forEach(p=>p.classList.remove("on"))}};
+    $("nx").onclick=()=>{if(!setup.escenario&&!setup.custom.trim())return toast("Escoge o escribe un escenario.");setup.paso=2;render()};
+    return;
+  }
+  if(setup.paso===2){
+    main.innerHTML=`<div class="card"><h2>Tu persona</h2>
+    <label>Nombre</label><input id="nm" maxlength="30" value="${esc(setup.name||"")}" placeholder="Ej. Juan">
+    <label>Usuario</label><input id="hd" maxlength="20" value="${esc(setup.handle||"")}" placeholder="Ej. juancito_pr">
+    <label>Bio</label><textarea id="bio" maxlength="200" placeholder="Quién eres en este mundo">${esc(setup.bio||"")}</textarea>
+    <label>Fandoms (1 a 3)</label><div class="chips" id="fd">${FANDOMS.map(f=>`<div class="chip${setup.fandoms.includes(f)?" on":""}">${esc(f)}</div>`).join("")}</div>
+    <label>Otro fandom (opcional)</label><input id="otro" maxlength="40" placeholder="Ej. Bad Bunny">
+    <label>Nivel de locura del mundo: <b id="lv">${LOCURA[setup.locura-1]}</b></label><input type="range" id="lo" min="1" max="5" value="${setup.locura}">
+    <div class="row" style="margin-top:14px"><button class="btn alt" id="bk">Atrás</button><button class="btn" id="go">Buscar seguidores</button></div>
+    <div class="typing hidden" id="wait">Creando tu mundo…</div></div>`;
+    main.querySelectorAll("#fd .chip").forEach(c=>c.onclick=()=>{const f=c.textContent;
+      if(setup.fandoms.includes(f)){setup.fandoms=setup.fandoms.filter(x=>x!==f);c.classList.remove("on")}
+      else if(setup.fandoms.length<3){setup.fandoms.push(f);c.classList.add("on")}});
+    $("lo").oninput=e=>{setup.locura=+e.target.value;$("lv").textContent=LOCURA[setup.locura-1]};
+    $("bk").onclick=()=>{setup.paso=1;render()};
+    $("go").onclick=async()=>{
+      setup.name=$("nm").value.trim();setup.handle=$("hd").value.trim().replace(/[^\w.]/g,"")||"yo";setup.bio=$("bio").value.trim();
+      const otro=$("otro").value.trim(); const fandoms=[...setup.fandoms]; if(otro)fandoms.push(otro);
+      if(!setup.name||!fandoms.length) return toast("Pon tu nombre y al menos un fandom.");
+      setup.fandomsFinal=fandoms;
+      $("go").disabled=true;$("wait").classList.remove("hidden");
+      try{
+        const esc2=setup.escenario||setup.custom;
+        const r=await ai(`Juego de simulación de red social en español (tono latino, apto 13+, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor).
+Jugador: ${setup.name} (@${setup.handle}). Bio: "${setup.bio}". Escenario: ${esc2}. Fandoms: ${fandoms.join(", ")}. Locura del mundo: ${LOCURA[setup.locura-1]}.
+Crea 6 personajes originales que encajen en este mundo y fandoms, muy distintos entre sí (ej. fan obsesionado, crítico sarcástico, alguien tierno, celebridad del fandom, rival, alguien misterioso). Asigna a cada uno la relación inicial que tendría con el jugador.
+Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea","personalidad":"rasgos y forma de hablar","fama":entero 200-5000000,"relacion":"una de: ${RELACIONES.join(", ")}"}]}`);
+        setup.cands=(r.personajes||[]).slice(0,6).map((c,i)=>newChar(c,i));
+        if(!setup.cands.length) throw {};
+        setup.paso=3; render();
+      }catch(e){aiError(e);$("go").disabled=false;$("wait").classList.add("hidden")}
+    };
+    return;
+  }
+  // paso 3: elegir primer seguidor
+  main.innerHTML=`<div class="card"><h2>¿Quién es tu primer seguidor?</h2><p class="muted">Será tu persona más cercana al empezar. Los demás también te seguirán.</p>
+  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${esc(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
+  <div class="row" style="margin-top:12px"><button class="btn alt" id="bk">Atrás</button><button class="btn" id="go">Entrar a fama</button></div>
+  <div class="typing hidden" id="wait">Preparando tu primer post…</div></div>`;
+  main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.primero=p.dataset.id;main.querySelectorAll(".pick").forEach(x=>x.classList.toggle("on",x===p))});
+  $("bk").onclick=()=>{setup.paso=2;render()};
+  $("go").onclick=async()=>{
+    if(!setup.primero) return toast("Escoge a tu primer seguidor.");
+    setup.cands.forEach(c=>{if(c.id===setup.primero){c.afinidad=72;if(c.relacion==="rivales"||c.relacion==="némesis")c.relacion="mejores amigos"}});
+    S={v:2,yo:{name:setup.name,handle:setup.handle,bio:setup.bio,fandoms:setup.fandomsFinal,escenario:setup.escenario||setup.custom,locura:setup.locura},
+      chars:setup.cands,feed:[],chats:{},unread:{},planes:[],
+      stats:{seguidores:setup.cands.length,xp:0,humor:10,aura:10,drama:0,likesTot:0,noticias:0},logros:[],cancelado:false};
+    $("go").disabled=true;$("wait").classList.remove("hidden");
+    try{
+      const p=charById(setup.primero);
+      const r=await ai(`${mundo()}
+Personajes:\n${S.chars.map(charLine).join("\n")}
+Es el primer día del jugador en la red. Escribe SU primer post (en primera persona, corto, con su voz y su escenario), 2-3 comentarios de personajes (incluye a ${p.nombre}, id ${p.id}), y 1 post de una cuenta de noticias/chisme ficticia que hable del jugador.
+Responde SOLO JSON: {"post":"","comentarios":[{"id":"","texto":""}],"likes":entero,"postsSobreTi":[{"nombre":"","usuario":"","esNoticia":true,"texto":""}]}`);
+      S.feed.unshift({tipo:"mio",auto:true,t:Date.now(),texto:r.post||"¡Hola mundo! 👋",likes:num(r.likes,12),reposts:2,nuevos:0,
+        replies:(r.comentarios||[]).filter(c=>charById(c.id)).map(c=>({cid:c.id,texto:c.texto}))});
+      addNPCPosts(r.postsSobreTi);
+      S.chats[p.id]=[{yo:false,texto:`¡Ey ${S.yo.name}! Ya te sigo 👀 Avísame cualquier cosa.`}]; S.unread[p.id]=1;
+    }catch(e){}
+    setup=null; save(); view="feed"; render(); toast("¡Bienvenido a fama! Generamos tu primer post 👇");
+  };
+}
+
+// ---------- feed ----------
+function postHTML(p){
+  if(p.tipo==="npc"){const a=p.autor;
+    return `<div class="card post"><div class="row">${av(a.nombre,a.news?"#118ab2":"#555")}<div><div class="name">${esc(a.nombre)}${a.news?'<span class="badge news">📰 noticias</span>':""}</div><div class="handle">@${esc(a.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+  if(p.tipo==="char"){const c=charById(p.cid)||{nombre:"?",usuario:"?",color:"#555"};
+    return `<div class="card post"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${esc(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+  const con=p.con&&charById(p.con);
+  const reps=(p.replies||[]).map(r=>{const c=charById(r.cid)||{nombre:r.nombre||"Alguien",usuario:r.usuario||"anon",color:"#555"};
+    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${esc(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
+  const ds=p.delta?[p.delta.humor?`😂 ${p.delta.humor>0?"+":""}${p.delta.humor}`:"",p.delta.aura?`✨ ${p.delta.aura>0?"+":""}${p.delta.aura}`:"",p.delta.drama?`🌶️ ${p.delta.drama>0?"+":""}${p.delta.drama}`:""].filter(Boolean).join(" · "):"";
+  return `<div class="card post"><div class="row">${av(S.yo.name,"#ff5c8a")}<div><div class="name">${esc(S.yo.name)}${p.viral?'<span class="badge viral">🔥 viral</span>':""}${con?`<span class="badge with">con ${esc(con.nombre)}</span>`:""}</div><div class="handle">@${esc(S.yo.handle)}</div></div></div>
+  <div class="body">${esc(p.texto)}</div>
+  <div class="meta"><span>❤️ ${fmt(p.likes)}</span><span>🔁 ${fmt(p.reposts)}</span><span>💬 ${(p.replies||[]).length}</span>${p.nuevos?`<span style="color:var(--ok)">+${fmt(p.nuevos)} seguidores</span>`:""}</div>
+  ${ds?`<div class="muted" style="margin-top:4px">${ds}</div>`:""}${reps}</div>`;
+}
+function renderFeed(){
+  main.innerHTML=`${S.cancelado?`<div class="notice cancel">🚫 <b>Estás cancelado.</b> La gente está molesta. Publica una disculpa, algo gracioso o haz planes con tus amigos para recuperarte.</div>`:""}
+  <div class="card"><div class="row" style="align-items:flex-start">${av(S.yo.name,"#ff5c8a")}<textarea id="tx" maxlength="280" placeholder="¿Qué está pasando, ${esc(S.yo.name)}?"></textarea></div>
+  <div class="row" style="margin-top:8px"><select id="con" style="flex:1"><option value="">Postear solo</option>${S.chars.map(c=>`<option value="${c.id}">Postear con ${esc(c.nombre)}</option>`).join("")}</select><button class="btn" id="pub">Publicar</button></div>
+  <div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted" id="ct">0/280</span><button class="btn alt sm" id="idea">💡 Dame una idea</button></div>
+  <div class="typing hidden" id="tp">La red está reaccionando…</div></div>
+  <div class="bar" title="Drama"><i style="width:${S.stats.drama}%;background:${S.stats.drama>70?"var(--bad)":S.stats.drama>40?"var(--warn)":"var(--ok)"}"></i></div>
+  <div class="muted" style="margin:-6px 0 10px">🌶️ Drama ${S.stats.drama}/100 ${S.stats.drama>=70?"— ¡cuidado, te pueden cancelar!":""}</div>
+  <div id="feed">${S.feed.map(postHTML).join("")||'<div class="card muted">Tu feed está vacío.</div>'}</div>`;
+  const tx=$("tx"); tx.oninput=()=>$("ct").textContent=tx.value.length+"/280";
+  $("pub").onclick=()=>publish(tx.value.trim(),$("con").value);
+  $("idea").onclick=async()=>{if(busy)return;busy=true;$("idea").disabled=true;
+    try{const r=await ai(`${mundo()}\nSugiere UN post corto y entretenido que el jugador podría publicar ahora (en primera persona, máx 200 caracteres, con su voz). Responde SOLO JSON: {"post":""}`);tx.value=r.post||"";tx.oninput()}catch(e){aiError(e)}
+    busy=false;$("idea").disabled=false};
+}
+async function publish(texto,conId){
+  if(!texto||busy) return; busy=true;
+  $("pub").disabled=true; $("tp").classList.remove("hidden");
+  const con=conId&&charById(conId);
+  const recientes=S.feed.filter(p=>p.tipo==="mio").slice(0,3).map(p=>"- "+p.texto).join("\n")||"(ninguno)";
+  try{
+    const r=await ai(`${mundo()}
+Posts anteriores del jugador:\n${recientes}
+Personajes que lo siguen:\n${S.chars.map(charLine).join("\n")}
+NUEVO POST del jugador${con?` (publicado JUNTO CON ${con.nombre}, id ${con.id}, que tiene ${fmt(con.fama)} seguidores: eso aumenta mucho el alcance)`:""}: "${texto}"
+Simula la reacción de la red:
+- 2 a 4 personajes comentan con su voz y recordando lo que saben${con?` (${con.nombre} comenta primero)`:""}. Puedes incluir 0-2 comentarios de NPCs desconocidos (sin id, con nombre y usuario inventados).
+- likes, reposts y nuevos seguidores realistas según ${fmt(S.stats.seguidores)} seguidores y qué tan bueno/gracioso/polémico es el post. Viral solo si es muy bueno (raro). Escala con el nivel de locura.
+- deltas de humor, aura y drama (-15 a 15). Lo polémico sube drama; lo gracioso sube humor; lo seguro/cool sube aura.${S.cancelado?" Si el post es una buena disculpa o algo que la gente perdona, marca perdonado:true.":""}
+- 0-2 posts de otras cuentas (noticias/chisme o fans) hablando del jugador.
+- recuerdos: 0-2 cosas que algún personaje recordará de esto.
+- dm: opcionalmente (40%) un personaje le escribe por mensaje directo por su cuenta.
+- nuevoPersonaje: opcionalmente (20%) un personaje nuevo original empieza a seguirlo.
+Responde SOLO JSON: {"comentarios":[{"id":"id o vacío","nombre":"si es NPC","usuario":"si es NPC","texto":""}],"likes":0,"reposts":0,"nuevosSeguidores":0,"viral":false,"humor":0,"aura":0,"drama":0,"perdonado":false,"cambiosAfinidad":[{"id":"","delta":0}],"recuerdos":[{"id":"","recuerdo":""}],"postsSobreTi":[{"nombre":"","usuario":"","esNoticia":true,"texto":"","likes":0}],"dm":null,"nuevoPersonaje":null}
+(dm: {"id":"","texto":""}; nuevoPersonaje: {"nombre":"","usuario":"","bio":"","personalidad":"","fama":0,"relacion":""})`);
+    const post={tipo:"mio",t:Date.now(),texto,con:con?con.id:null,likes:Math.max(0,num(r.likes)),reposts:Math.max(0,num(r.reposts)),viral:!!r.viral,nuevos:Math.max(0,num(r.nuevosSeguidores)),
+      replies:(r.comentarios||[]).filter(c=>c&&c.texto).map(c=>charById(c.id)?{cid:c.id,texto:c.texto}:{nombre:c.nombre,usuario:c.usuario,texto:c.texto}),
+      delta:{humor:num(r.humor),aura:num(r.aura),drama:num(r.drama)}};
+    (r.cambiosAfinidad||[]).forEach(a=>{const c=charById(a&&a.id);if(c)c.afinidad=clamp(c.afinidad+clamp(num(a.delta),-10,10),0,100)});
+    (r.recuerdos||[]).forEach(m=>m&&addMemoria(m.id,m.recuerdo));
+    S.feed.unshift(post); addNPCPosts(r.postsSobreTi);
+    S.stats.seguidores+=post.nuevos; S.stats.likesTot+=post.likes;
+    S.stats.xp+=Math.round(10+post.likes/20+post.reposts/4+(post.viral?150:0));
+    const wasCancel=S.cancelado; applyStats(r);
+    if(wasCancel&&r.perdonado){S.cancelado=false;S.stats.drama=30;if(!S.logros.includes("cancel"))S.logros.push("cancel");toast("🧯 ¡Te perdonaron! Ya no estás cancelado.")}
+    if(r.dm&&charById(r.dm.id)&&r.dm.texto){const id=r.dm.id;(S.chats[id]=S.chats[id]||[]).push({yo:false,texto:r.dm.texto});S.unread[id]=(S.unread[id]||0)+1;toast(`💬 ${charById(id).nombre} te escribió`)}
+    if(r.nuevoPersonaje&&r.nuevoPersonaje.nombre&&S.chars.length<24){const n=newChar(r.nuevoPersonaje,S.chars.length,50);S.chars.push(n);toast(`✨ ${n.nombre} empezó a seguirte`)}
+    if(post.viral) toast("🔥 ¡Tu post se hizo viral!");
+    checkLogros(); save();
+  }catch(e){aiError(e)}
+  busy=false; render();
+}
+
+// ---------- seguidores ----------
+function renderFollowers(){
+  const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
+  main.innerHTML=`<h2>Tus personajes</h2><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>`+
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${esc(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
+  <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
+  <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
+  ${c.memoria?.length?`<div class="muted" style="margin-top:8px">🧠 Recuerda: ${esc(c.memoria.slice(-3).join(" · "))}</div>`:""}</div>`).join("");
+  main.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{openChat=b.dataset.dm;view="mensajes";render()});
+  main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{view="planes";render();$("pc").value=b.dataset.pl});
+  main.querySelectorAll("[data-rel]").forEach(s=>s.onchange=()=>{const c=charById(s.dataset.rel);c.relacion=s.value;addMemoria(c.id,`${S.yo.name} ahora nos considera ${s.value}`);save();toast(`Ahora tú y ${c.nombre} son ${s.value}`)});
+}
+
+// ---------- mensajes ----------
+function renderMessages(){
+  if(!openChat){
+    const withChats=S.chars.filter(c=>S.chats[c.id]?.length).sort((a,b)=>(S.unread[b.id]||0)-(S.unread[a.id]||0));
+    main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Mensajes</h2><button class="btn alt sm" id="pk">🔔 ¿Alguien me escribió?</button></div>
+    <div class="typing hidden" id="tp">Revisando…</div>`+
+    (withChats.length?withChats.map(c=>{const last=S.chats[c.id].slice(-1)[0],u=S.unread[c.id]||0;
+      return `<div class="card row" data-c="${c.id}" style="cursor:pointer">${av(c.nombre,c.color)}<div style="min-width:0;flex:1"><div class="name">${esc(c.nombre)}${u?`<span class="badge viral">${u} nuevo${u>1?"s":""}</span>`:""}</div><div class="handle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.yo?"Tú: ":""}${esc(last.texto)}</div></div></div>`}).join(""):'<div class="card muted">Sin conversaciones todavía.</div>')+
+    `<p class="muted">Escríbele a cualquiera:</p><div class="chips">${S.chars.map(c=>`<div class="chip" data-c="${c.id}">${esc(c.nombre)}</div>`).join("")}</div>`;
+    main.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{openChat=b.dataset.c;render()});
+    $("pk").onclick=pokeDM;
+    return;
+  }
+  const c=charById(openChat); const msgs=S.chats[c.id]||[]; S.unread[c.id]=0; header(); save();
+  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${esc(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
+  <div class="card"><div class="dm" id="dm">${msgs.map(m=>`<div class="msg ${m.yo?"me":"them"}">${esc(m.texto)}</div>`).join("")||`<p class="muted">Empieza la conversación con ${esc(c.nombre)}.</p>`}<div class="typing hidden" id="tp">${esc(c.nombre)} está escribiendo…</div></div>
+  <div class="row" style="margin-top:10px"><input id="mi" maxlength="300" placeholder="Escribe un mensaje…"><button class="btn" id="snd">Enviar</button></div></div>`;
+  const dm=$("dm"); dm.scrollTop=dm.scrollHeight;
+  $("bk").onclick=()=>{openChat=null;render()};
+  const send=()=>sendDM(c,$("mi").value.trim());
+  $("snd").onclick=send; $("mi").onkeydown=e=>{if(e.key==="Enter")send()};
+}
+async function pokeDM(){
+  if(busy)return; busy=true; $("pk").disabled=true; $("tp").classList.remove("hidden");
+  const c=[...S.chars].sort(()=>Math.random()-.5).sort((a,b)=>b.afinidad-a.afinidad+(Math.random()*40-20))[0];
+  try{
+    const r=await ai(`${mundo()}\nEres ${c.nombre} (@${c.usuario}). ${c.bio}. Personalidad: ${c.personalidad}. Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}. Último post de ${S.yo.name}: "${S.feed.find(p=>p.tipo==="mio")?.texto||"nada"}".
+Escríbele TÚ PRIMERO un mensaje directo por tu cuenta (chisme, una pregunta, un plan, una queja, un meme…), corto y con tu voz, apto 13+. Responde SOLO JSON: {"texto":""}`);
+    (S.chats[c.id]=S.chats[c.id]||[]).push({yo:false,texto:r.texto||"👀"}); S.unread[c.id]=(S.unread[c.id]||0)+1; save(); toast(`💬 ${c.nombre} te escribió`);
+  }catch(e){aiError(e)}
+  busy=false; render();
+}
+async function sendDM(c,texto){
+  if(!texto||busy) return; busy=true;
+  (S.chats[c.id]=S.chats[c.id]||[]).push({yo:true,texto}); render();
+  $("tp").classList.remove("hidden"); $("snd").disabled=true;
+  const hist=S.chats[c.id].slice(-14).map(m=>(m.yo?S.yo.name:c.nombre)+": "+m.texto).join("\n");
+  try{
+    const r=await ai(`${mundo()}
+Eres ${c.nombre} (@${c.usuario}). Bio: ${c.bio}. Personalidad y forma de hablar: ${c.personalidad}. Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Lo que recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}.
+Mensajes directos (tono de chat, corto, emojis ok, apto 13+, nunca romántico ni sexual):
+${hist}
+Responde como ${c.nombre}. Si aprendes algo importante del jugador, ponlo en "recuerdo". Responde SOLO JSON: {"respuesta":"","delta":0,"recuerdo":""}`);
+    S.chats[c.id].push({yo:false,texto:r.respuesta||"…"});
+    c.afinidad=clamp(c.afinidad+clamp(num(r.delta),-5,5),0,100);
+    if(r.recuerdo) addMemoria(c.id,r.recuerdo);
+    S.stats.xp+=3; checkLogros(); save();
+  }catch(e){aiError(e)}
+  busy=false; render();
+}
+
+// ---------- planes ----------
+function renderPlanes(){
+  const pend=S.planes.filter(p=>p.estado==="pendiente"), hechos=S.planes.filter(p=>p.estado==="hecho").slice().reverse();
+  main.innerHTML=`<h2>Planes</h2>
+  <div class="card"><h3>Hacer un plan</h3>
+  <label>Con quién</label><select id="pc">${S.chars.map(c=>`<option value="${c.id}">${esc(c.nombre)}</option>`).join("")}</select>
+  <label>Qué van a hacer</label><input id="pa" maxlength="100" placeholder="Ej. Ir a la playa en Luquillo">
+  <div class="chips" style="margin-top:8px">${ACTIVIDADES.map(a=>`<div class="chip" data-a="${esc(a)}">${esc(a)}</div>`).join("")}</div>
+  <div class="row" style="margin-top:10px"><button class="btn alt" id="ag">📅 Agendar</button><button class="btn" id="ya">Hacerlo ahora</button></div>
+  <div class="typing hidden" id="tp">Viviendo el plan…</div></div>
+  ${pend.length?`<h3>Pendientes</h3>`+pend.map(p=>{const c=charById(p.cid);return c?`<div class="card row"><div style="flex:1">${esc(p.actividad)} <span class="muted">con ${esc(c.nombre)}</span></div><button class="btn sm" data-go="${p.id}">Hacerlo</button><button class="btn alt sm" data-x="${p.id}">✕</button></div>`:""}).join(""):""}
+  ${hechos.length?`<h3>Recuerdos</h3>`+hechos.map(p=>{const c=charById(p.cid)||{nombre:"?",color:"#555"};return `<div class="card"><div class="row">${av(c.nombre,c.color,1)}<b>${esc(p.actividad)}</b></div><div class="story">${esc(p.resultado)}</div></div>`}).join(""):'<p class="muted">Todavía no has hecho planes. Los planes suben la afinidad y generan posts.</p>'}`;
+  main.querySelectorAll("[data-a]").forEach(ch=>ch.onclick=()=>$("pa").value=ch.dataset.a);
+  $("ag").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");S.planes.push({id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"});save();toast("📅 Plan agendado");render()};
+  $("ya").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");const p={id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"};S.planes.push(p);doPlan(p)};
+  main.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>doPlan(S.planes.find(p=>p.id===b.dataset.go)));
+  main.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{S.planes=S.planes.filter(p=>p.id!==b.dataset.x);save();render()});
+}
+async function doPlan(p){
+  if(busy||!p)return; const c=charById(p.cid); if(!c)return; busy=true;
+  $("tp").classList.remove("hidden"); main.querySelectorAll("button").forEach(b=>b.disabled=true);
+  try{
+    const r=await ai(`${mundo()}
+${charLine(c)}
+${S.yo.name} y ${c.nombre} hacen este plan: "${p.actividad}". Narra en 3-5 oraciones qué pasó (con sorpresa o giro según la locura del mundo, divertido, apto 13+). Luego ${c.nombre} publica un post sobre el plan. Si alguna cuenta de noticias se entera, opcional.
+Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguidores":0,"afinidad":entre -5 y 15,"humor":0,"aura":0,"drama":0,"recuerdo":"","postsSobreTi":[]}`);
+    p.estado="hecho"; p.resultado=r.historia||"Fue un buen día.";
+    c.afinidad=clamp(c.afinidad+clamp(num(r.afinidad,5),-5,15),0,100);
+    addMemoria(c.id,r.recuerdo||`hicimos: ${p.actividad}`);
+    if(r.postDelPersonaje) S.feed.unshift({tipo:"char",t:Date.now(),cid:c.id,texto:r.postDelPersonaje,likes:Math.max(0,num(r.likes,Math.round(c.fama*.05)))});
+    addNPCPosts(r.postsSobreTi);
+    S.stats.seguidores+=Math.max(0,num(r.nuevosSeguidores)); S.stats.xp+=25; applyStats(r);
+    checkLogros(); save(); toast(`📅 Plan con ${c.nombre} completado`);
+  }catch(e){aiError(e)}
+  busy=false; render();
+}
+
+// ---------- perfil ----------
+function renderProfile(){
+  const s=S.stats, nv=nivel(), xpNext=Math.pow(nv,2)*40, xpPrev=Math.pow(nv-1,2)*40;
+  const pct=Math.round(((s.xp-xpPrev)/(xpNext-xpPrev))*100);
+  const meter=(lbl,v,col)=>`<div class="muted">${lbl} ${v}/100</div><div class="bar"><i style="width:${v}%;background:${col}"></i></div>`;
+  main.innerHTML=`<div class="card"><div class="row">${av(S.yo.name,"#ff5c8a")}<div><div class="name" style="font-size:18px">${esc(S.yo.name)}${S.cancelado?'<span class="badge" style="background:#3a1818;color:#ff9b9b">cancelado</span>':""}</div><div class="handle">@${esc(S.yo.handle)} · ${esc(S.yo.escenario)}</div></div></div>
+  <div class="body" style="margin:10px 0">${esc(S.yo.bio)}</div><div class="chips">${S.yo.fandoms.map(f=>`<div class="chip on">${esc(f)}</div>`).join("")}</div></div>
+  <div class="card stats"><div><b>${fmt(s.seguidores)}</b><span>seguidores</span></div><div><b>${fmt(s.likesTot)}</b><span>likes</span></div><div><b>${nv}</b><span>nivel</span></div></div>
+  <div class="card"><div class="muted">XP ${fmt(s.xp)} → nivel ${nv+1} en ${fmt(xpNext)}</div><div class="bar"><i style="width:${clamp(pct,0,100)}%;background:var(--accent2)"></i></div>
+  ${meter("😂 Humor",s.humor,"#ffb547")}${meter("✨ Aura",s.aura,"#7c5cff")}${meter("🌶️ Drama",s.drama,s.drama>70?"#ff4d4d":"#ff5c8a")}</div>
+  <div class="card"><h3>Mundo</h3><label>Locura: <b id="lv">${LOCURA[S.yo.locura-1]}</b></label><input type="range" id="lo" min="1" max="5" value="${S.yo.locura}"></div>
+  <div class="card"><h3>🏆 Logros (${S.logros.length}/${LOGROS.length})</h3>${LOGROS.map(l=>`<div class="logro${S.logros.includes(l[0])?"":" off"}"><span style="font-size:22px">${l[1]}</span><div><div class="name">${l[2]}</div><div class="muted">${l[3]}</div></div></div>`).join("")}</div>
+  <div class="card"><button class="btn alt" id="rs">Empezar de nuevo</button><div id="cf" class="hidden" style="margin-top:10px"><p class="muted">Se borrará tu perfil, posts, personajes y logros.</p><button class="btn" id="rsy">Sí, borrar todo</button></div></div>
+  <p class="muted" style="text-align:center">fama es 100% gratis: sin energía, sin gemas, sin anuncios, sin suscripción.</p>`;
+  $("lo").oninput=e=>{S.yo.locura=+e.target.value;$("lv").textContent=LOCURA[S.yo.locura-1];save()};
+  $("rs").onclick=()=>$("cf").classList.remove("hidden");
+  $("rsy").onclick=async()=>{S=null;setup=null;try{localStorage.removeItem("estado_juego_v2");localStorage.removeItem("estado_juego")}catch(e){}
+    if(db&&userId){try{await db.collection("data/users/"+userId).doc("juego").delete()}catch(e){}} view="feed";render()};
+}
+
+nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(busy)return;view=b.dataset.v;if(view!=="mensajes")openChat=null;render();window.scrollTo(0,0)});
+
+(async()=>{
+  claude.use("sample").then(s=>{sample=s;if(!S)render()}).catch(()=>{});
+  S=await load(); render();
+})();
+})();
+</script>
+</body>
+</html>
