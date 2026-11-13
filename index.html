@@ -129,7 +129,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const fmt=n=>{n=Math.round(n||0);return n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(n)};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const num=(v,d=0)=>Number.isFinite(+v)?+v:d;
-const av=(n,c,s)=>`<div class="av${s?" s":""}" style="background:${c}">${esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
+const av=(n,c,s,e)=>`<div class="av${s?" s":""}" style="background:${c}">${e?esc(e):esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let toastQ=[],toastOn=false;
 function toast(t){toastQ.push(t);if(!toastOn)nextToast()}
@@ -207,7 +207,7 @@ function addNPCPosts(list){
     if(n.esNoticia) S.stats.noticias=(S.stats.noticias||0)+1;
   });
 }
-function newChar(n,i,af=50){return {id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
+function newChar(n,i,af=50){return {emoji:n.emoji||"",id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:n.color||COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
 function checkLogros(){
   const s=S.stats,has=k=>S.logros.includes(k),add=k=>{if(!has(k)){S.logros.push(k);const l=LOGROS.find(x=>x[0]===k);toast(`🏆 Logro: ${l[2]}`)}};
   if(S.feed.some(p=>p.tipo==="mio"&&!p.auto))add("primer");
@@ -293,7 +293,7 @@ Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea",
   }
   // paso 3: elegir primer seguidor
   main.innerHTML=`<div class="card"><h2>¿Quién es tu primer seguidor?</h2><p class="muted">Será tu persona más cercana al empezar. Los demás también te seguirán.</p>
-  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${uh(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
+  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${uh(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
   <div class="row" style="margin-top:12px"><button class="btn alt" id="bk">Atrás</button><button class="btn" id="go">Entrar a fama</button></div>
   <div class="typing hidden" id="wait">Preparando tu primer post…</div></div>`;
   main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.primero=p.dataset.id;main.querySelectorAll(".pick").forEach(x=>x.classList.toggle("on",x===p))});
@@ -325,19 +325,19 @@ function postHTML(p){
   if(p.tipo==="npc"){const a=p.autor;
     return `<div class="card post"><div class="row">${av(a.nombre,a.news?"#118ab2":"#555")}<div><div class="name">${esc(a.nombre)}${a.news?'<span class="badge news">📰 noticias</span>':""}</div><div class="handle">@${uh(a.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   if(p.tipo==="char"){const c=charById(p.cid)||{nombre:"?",usuario:"?",color:"#555"};
-    return `<div class="card post"><div class="row">${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${uh(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+    return `<div class="card post"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${uh(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   const con=p.con&&charById(p.con);
   const reps=(p.replies||[]).map(r=>{const c=charById(r.cid)||{nombre:r.nombre||"Alguien",usuario:r.usuario||"anon",color:"#555"};
-    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${uh(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
+    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1,c.emoji)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${uh(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
   const ds=p.delta?[p.delta.humor?`😂 ${p.delta.humor>0?"+":""}${p.delta.humor}`:"",p.delta.aura?`✨ ${p.delta.aura>0?"+":""}${p.delta.aura}`:"",p.delta.drama?`🌶️ ${p.delta.drama>0?"+":""}${p.delta.drama}`:""].filter(Boolean).join(" · "):"";
-  return `<div class="card post"><div class="row">${av(S.yo.name,"#ff5c8a")}<div><div class="name">${esc(S.yo.name)}${p.viral?'<span class="badge viral">🔥 viral</span>':""}${con?`<span class="badge with">con ${esc(con.nombre)}</span>`:""}</div><div class="handle">@${esc(S.yo.handle)}</div></div></div>
+  return `<div class="card post"><div class="row">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}<div><div class="name">${esc(S.yo.name)}${p.viral?'<span class="badge viral">🔥 viral</span>':""}${con?`<span class="badge with">con ${esc(con.nombre)}</span>`:""}</div><div class="handle">@${esc(S.yo.handle)}</div></div></div>
   <div class="body">${esc(p.texto)}</div>
   <div class="meta"><span>❤️ ${fmt(p.likes)}</span><span>🔁 ${fmt(p.reposts)}</span><span>💬 ${(p.replies||[]).length}</span>${p.nuevos?`<span style="color:var(--ok)">+${fmt(p.nuevos)} seguidores</span>`:""}</div>
   ${ds?`<div class="muted" style="margin-top:4px">${ds}</div>`:""}${reps}</div>`;
 }
 function renderFeed(){
   main.innerHTML=`${S.cancelado?`<div class="notice cancel">🚫 <b>Estás cancelado.</b> La gente está molesta. Publica una disculpa, algo gracioso o haz planes con tus amigos para recuperarte.</div>`:""}
-  <div class="card"><div class="row" style="align-items:flex-start">${av(S.yo.name,"#ff5c8a")}<textarea id="tx" maxlength="280" placeholder="¿Qué está pasando, ${esc(S.yo.name)}?"></textarea></div>
+  <div class="card"><div class="row" style="align-items:flex-start">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}<textarea id="tx" maxlength="280" placeholder="¿Qué está pasando, ${esc(S.yo.name)}?"></textarea></div>
   <div class="row" style="margin-top:8px"><select id="con" style="flex:1"><option value="">Postear solo</option>${S.chars.map(c=>`<option value="${c.id}">Postear con ${esc(c.nombre)}</option>`).join("")}</select><button class="btn" id="pub">Publicar</button></div>
   <div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted" id="ct">0/280</span><button class="btn alt sm" id="idea">💡 Dame una idea</button></div>
   <div class="typing hidden" id="tp">La red está reaccionando…</div></div>
@@ -389,14 +389,55 @@ Responde SOLO JSON: {"comentarios":[{"id":"id o vacío","nombre":"si es NPC","us
 }
 
 // ---------- seguidores ----------
+let charForm=null;
+function renderCharForm(){
+  const f=charForm;
+  main.innerHTML=`<div class="card"><h2>${f.id?"Editar personaje":"Crear personaje"}</h2>
+  <p class="muted">Inventa a tu propia gente. Deben ser personajes originales: nada de personas reales ni personajes con derechos de autor.</p>
+  <label>Nombre</label><input id="cn" maxlength="40" value="${esc(f.nombre)}" placeholder="Ej. Kiara la influencer">
+  <label>Usuario (sin @)</label><input id="cu" maxlength="30" value="${esc(f.usuario)}" placeholder="kiara.vibes">
+  <label>Bio (una línea)</label><input id="cb" maxlength="120" value="${esc(f.bio)}" placeholder="Reina del chisme del barrio">
+  <label>Personalidad y cómo habla</label><textarea id="cp" maxlength="300" placeholder="Ej. Dramática, usa mucho 'nena' y emojis, siempre exagera">${esc(f.personalidad)}</textarea>
+  <div class="row" style="margin-top:8px"><button class="btn alt sm" id="cai">✨ Completar con IA</button><span class="muted">Llena los campos vacíos usando lo que ya escribiste.</span></div>
+  <label>Relación contigo</label><select id="cr">${RELACIONES.map(x=>`<option${x===f.relacion?" selected":""}>${x}</option>`).join("")}</select>
+  <label>Emoji de avatar (opcional)</label><input id="ce" maxlength="4" value="${esc(f.emoji)}" placeholder="😎">
+  <label>Color</label><div class="chips" id="cc">${COLORS.map(c=>`<div class="chip${c===f.color?" on":""}" data-col="${c}" style="background:${c};border-color:${c===f.color?"#fff":c};width:34px;height:34px;padding:0"></div>`).join("")}</div>
+  <label>Seguidores que tiene (fama)</label><input id="cf" type="number" min="0" max="50000000" value="${f.fama}">
+  <div class="row" style="margin-top:14px"><button class="btn alt" id="ccn">Cancelar</button><button class="btn" id="csv">${f.id?"Guardar":"Crear"}</button>${f.id?`<button class="btn alt" id="cdl" style="margin-left:auto">🗑 Borrar</button>`:""}</div>
+  <div class="typing hidden" id="ctp">Pensando…</div></div>`;
+  const read=()=>{f.nombre=$("cn").value.trim();f.usuario=$("cu").value.trim().replace(/^@+/,"").replace(/\s/g,"");f.bio=$("cb").value.trim();f.personalidad=$("cp").value.trim();f.relacion=$("cr").value;f.emoji=$("ce").value.trim();f.fama=clamp(num($("cf").value,500),0,5e7)};
+  main.querySelectorAll("[data-col]").forEach(c=>c.onclick=()=>{read();f.color=c.dataset.col;renderCharForm()});
+  $("ccn").onclick=()=>{charForm=null;render()};
+  if($("cdl")) $("cdl").onclick=()=>{ if(!f.confirmDel){f.confirmDel=true;$("cdl").textContent="¿Seguro? Toca otra vez";return}
+    S.feed=S.feed.filter(p=>p.cid!==f.id);delete S.chats[f.id];delete S.unread[f.id];S.planes=S.planes.filter(p=>p.cid!==f.id);
+    S.chars=S.chars.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render()};
+  $("cai").onclick=async()=>{read(); if(!f.nombre&&!f.bio&&!f.personalidad) return toast("Escribe al menos un nombre o una idea.");
+    $("cai").disabled=true;$("ctp").classList.remove("hidden");
+    try{const x=await ai(`${mundo()}
+El jugador está creando un personaje original (ficticio, apto 13+). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}". Completa lo que falte y no cambies lo que ya está escrito.
+Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea","personalidad":"rasgos y forma de hablar"}`);
+      if(!f.nombre&&x.nombre)f.nombre=String(x.nombre).slice(0,40); if(!f.usuario&&x.usuario)f.usuario=String(x.usuario).replace(/^@+/,"").replace(/\s/g,"").slice(0,30);
+      if(!f.bio&&x.bio)f.bio=String(x.bio).slice(0,120); if(!f.personalidad&&x.personalidad)f.personalidad=String(x.personalidad).slice(0,300);
+      renderCharForm();
+    }catch(e){aiError(e);$("cai").disabled=false;$("ctp").classList.add("hidden")}};
+  $("csv").onclick=()=>{read(); if(!f.nombre) return toast("Ponle un nombre al personaje.");
+    if(!f.usuario) f.usuario=f.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9._]/g,"")||"user";
+    if(f.id){const c=charById(f.id);Object.assign(c,{nombre:f.nombre,usuario:f.usuario,bio:f.bio,personalidad:f.personalidad||c.personalidad,relacion:f.relacion,emoji:f.emoji,color:f.color,fama:f.fama});toast("Personaje actualizado")}
+    else{ if(S.chars.length>=30) return toast("Ya tienes 30 personajes. Borra alguno primero.");
+      const n=newChar({...f,personalidad:f.personalidad||"amigable y natural"},S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te creó como personaje`);toast(`✨ ${n.nombre} ya está en tu mundo`)}
+    charForm=null;save();render()};
+}
 function renderFollowers(){
+  if(charForm) return renderCharForm();
   const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
-  main.innerHTML=`<h2>Tus personajes</h2><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>`+
-  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Tus personajes</h2><button class="btn sm" id="newc">➕ Crear</button></div><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>`+
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
   <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
   ${c.memoria?.length?`<div class="muted" style="margin-top:8px">🧠 Recuerda: ${esc(c.memoria.slice(-3).join(" · "))}</div>`:""}</div>`).join("");
+  $("newc").onclick=()=>{charForm={id:null,nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[S.chars.length%COLORS.length],fama:500};render()};
+  main.querySelectorAll("[data-edc]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.edc);charForm={id:c.id,nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama};render()});
   main.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{openChat=b.dataset.dm;view="mensajes";render()});
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{view="planes";render();$("pc").value=b.dataset.pl});
   main.querySelectorAll("[data-rel]").forEach(s=>s.onchange=()=>{const c=charById(s.dataset.rel);c.relacion=s.value;addMemoria(c.id,`${S.yo.name} ahora nos considera ${s.value}`);save();toast(`Ahora tú y ${c.nombre} son ${s.value}`)});
@@ -409,14 +450,14 @@ function renderMessages(){
     main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Mensajes</h2><button class="btn alt sm" id="pk">🔔 ¿Alguien me escribió?</button></div>
     <div class="typing hidden" id="tp">Revisando…</div>`+
     (withChats.length?withChats.map(c=>{const last=S.chats[c.id].slice(-1)[0],u=S.unread[c.id]||0;
-      return `<div class="card row" data-c="${c.id}" style="cursor:pointer">${av(c.nombre,c.color)}<div style="min-width:0;flex:1"><div class="name">${esc(c.nombre)}${u?`<span class="badge viral">${u} nuevo${u>1?"s":""}</span>`:""}</div><div class="handle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.yo?"Tú: ":""}${esc(last.texto)}</div></div></div>`}).join(""):'<div class="card muted">Sin conversaciones todavía.</div>')+
+      return `<div class="card row" data-c="${c.id}" style="cursor:pointer">${av(c.nombre,c.color,0,c.emoji)}<div style="min-width:0;flex:1"><div class="name">${esc(c.nombre)}${u?`<span class="badge viral">${u} nuevo${u>1?"s":""}</span>`:""}</div><div class="handle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.yo?"Tú: ":""}${esc(last.texto)}</div></div></div>`}).join(""):'<div class="card muted">Sin conversaciones todavía.</div>')+
     `<p class="muted">Escríbele a cualquiera:</p><div class="chips">${S.chars.map(c=>`<div class="chip" data-c="${c.id}">${esc(c.nombre)}</div>`).join("")}</div>`;
     main.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{openChat=b.dataset.c;render()});
     $("pk").onclick=pokeDM;
     return;
   }
   const c=charById(openChat); const msgs=S.chats[c.id]||[]; S.unread[c.id]=0; header(); save();
-  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
+  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
   <div class="card"><div class="dm" id="dm">${msgs.map(m=>`<div class="msg ${m.yo?"me":"them"}">${esc(m.texto)}</div>`).join("")||`<p class="muted">Empieza la conversación con ${esc(c.nombre)}.</p>`}<div class="typing hidden" id="tp">${esc(c.nombre)} está escribiendo…</div></div>
   <div class="row" style="margin-top:10px"><input id="mi" maxlength="300" placeholder="Escribe un mensaje…"><button class="btn" id="snd">Enviar</button></div></div>`;
   const dm=$("dm"); dm.scrollTop=dm.scrollHeight;
@@ -464,7 +505,7 @@ function renderPlanes(){
   <div class="row" style="margin-top:10px"><button class="btn alt" id="ag">📅 Agendar</button><button class="btn" id="ya">Hacerlo ahora</button></div>
   <div class="typing hidden" id="tp">Viviendo el plan…</div></div>
   ${pend.length?`<h3>Pendientes</h3>`+pend.map(p=>{const c=charById(p.cid);return c?`<div class="card row"><div style="flex:1">${esc(p.actividad)} <span class="muted">con ${esc(c.nombre)}</span></div><button class="btn sm" data-go="${p.id}">Hacerlo</button><button class="btn alt sm" data-x="${p.id}">✕</button></div>`:""}).join(""):""}
-  ${hechos.length?`<h3>Recuerdos</h3>`+hechos.map(p=>{const c=charById(p.cid)||{nombre:"?",color:"#555"};return `<div class="card"><div class="row">${av(c.nombre,c.color,1)}<b>${esc(p.actividad)}</b></div><div class="story">${esc(p.resultado)}</div></div>`}).join(""):'<p class="muted">Todavía no has hecho planes. Los planes suben la afinidad y generan posts.</p>'}`;
+  ${hechos.length?`<h3>Recuerdos</h3>`+hechos.map(p=>{const c=charById(p.cid)||{nombre:"?",color:"#555"};return `<div class="card"><div class="row">${av(c.nombre,c.color,1,c.emoji)}<b>${esc(p.actividad)}</b></div><div class="story">${esc(p.resultado)}</div></div>`}).join(""):'<p class="muted">Todavía no has hecho planes. Los planes suben la afinidad y generan posts.</p>'}`;
   main.querySelectorAll("[data-a]").forEach(ch=>ch.onclick=()=>$("pa").value=ch.dataset.a);
   $("ag").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");S.planes.push({id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"});save();toast("📅 Plan agendado");render()};
   $("ya").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");const p={id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"};S.planes.push(p);doPlan(p)};
@@ -491,12 +532,35 @@ Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguid
 }
 
 // ---------- perfil ----------
+let editYo=null;
+function renderEditYo(){
+  const f=editYo;
+  main.innerHTML=`<div class="card"><h2>Mi perfil y escenario</h2>
+  <label>Nombre</label><input id="en" maxlength="40" value="${esc(f.name)}">
+  <label>Emoji de avatar (opcional)</label><input id="ee" maxlength="4" value="${esc(f.emoji)}" placeholder="🔥">
+  <label>Bio</label><textarea id="eb" maxlength="200">${esc(f.bio)}</textarea>
+  <label>Mis fandoms (separados por coma, máximo 5)</label><input id="ef" maxlength="150" value="${esc(f.fandoms)}">
+  <label>Escenario (el mundo donde vives)</label>
+  <div class="chips">${ESCENARIOS.map(e=>`<div class="chip" data-esc="${esc(e[1])}">${esc(e[0])} ${esc(e[1])}</div>`).join("")}</div>
+  <textarea id="es" maxlength="300" style="margin-top:8px" placeholder="Describe tu propio escenario">${esc(f.escenario)}</textarea>
+  <p class="muted">El escenario cambia cómo la IA inventa las noticias, los comentarios y los planes. Tus personajes y tu progreso se quedan igual.</p>
+  <div class="row" style="margin-top:12px"><button class="btn alt" id="ecn">Cancelar</button><button class="btn" id="esv">Guardar</button></div></div>`;
+  main.querySelectorAll("[data-esc]").forEach(c=>c.onclick=()=>{$("es").value=c.dataset.esc});
+  $("ecn").onclick=()=>{editYo=null;render()};
+  $("esv").onclick=()=>{const name=$("en").value.trim(); if(!name) return toast("Pon tu nombre.");
+    const fan=$("ef").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,5);
+    S.yo.name=name;S.yo.emoji=$("ee").value.trim();S.yo.bio=$("eb").value.trim();if(fan.length)S.yo.fandoms=fan;
+    const es=$("es").value.trim(); if(es&&es!==S.yo.escenario){S.yo.escenario=es;toast("🌎 Escenario cambiado")} else toast("Perfil guardado");
+    editYo=null;save();render()};
+}
 function renderProfile(){
+  if(editYo) return renderEditYo();
   const s=S.stats, nv=nivel(), xpNext=Math.pow(nv,2)*40, xpPrev=Math.pow(nv-1,2)*40;
   const pct=Math.round(((s.xp-xpPrev)/(xpNext-xpPrev))*100);
   const meter=(lbl,v,col)=>`<div class="muted">${lbl} ${v}/100</div><div class="bar"><i style="width:${v}%;background:${col}"></i></div>`;
-  main.innerHTML=`<div class="card"><div class="row">${av(S.yo.name,"#ff5c8a")}<div><div class="name" style="font-size:18px">${esc(S.yo.name)}${S.cancelado?'<span class="badge" style="background:#3a1818;color:#ff9b9b">cancelado</span>':""}</div><div class="handle">@${esc(S.yo.handle)} · ${esc(S.yo.escenario)}</div></div></div>
-  <div class="body" style="margin:10px 0">${esc(S.yo.bio)}</div><div class="chips">${S.yo.fandoms.map(f=>`<div class="chip on">${esc(f)}</div>`).join("")}</div></div>
+  main.innerHTML=`<div class="card"><div class="row">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}<div><div class="name" style="font-size:18px">${esc(S.yo.name)}${S.cancelado?'<span class="badge" style="background:#3a1818;color:#ff9b9b">cancelado</span>':""}</div><div class="handle">@${esc(S.yo.handle)} · ${esc(S.yo.escenario)}</div></div></div>
+  <div class="body" style="margin:10px 0">${esc(S.yo.bio)}</div><div class="chips">${S.yo.fandoms.map(f=>`<div class="chip on">${esc(f)}</div>`).join("")}</div>
+  <button class="btn alt sm" id="edy" style="margin-top:12px">✏️ Editar perfil y escenario</button></div>
   <div class="card stats"><div><b>${fmt(s.seguidores)}</b><span>seguidores</span></div><div><b>${fmt(s.likesTot)}</b><span>likes</span></div><div><b>${nv}</b><span>nivel</span></div></div>
   <div class="card"><div class="muted">XP ${fmt(s.xp)} → nivel ${nv+1} en ${fmt(xpNext)}</div><div class="bar"><i style="width:${clamp(pct,0,100)}%;background:var(--accent2)"></i></div>
   ${meter("😂 Humor",s.humor,"#ffb547")}${meter("✨ Aura",s.aura,"#7c5cff")}${meter("🌶️ Drama",s.drama,s.drama>70?"#ff4d4d":"#ff5c8a")}</div>
@@ -505,12 +569,13 @@ function renderProfile(){
   <div class="card"><button class="btn alt" id="rs">Empezar de nuevo</button><div id="cf" class="hidden" style="margin-top:10px"><p class="muted">Se borrará tu perfil, posts, personajes y logros.</p><button class="btn" id="rsy">Sí, borrar todo</button></div></div>
   <p class="muted" style="text-align:center">fama es 100% gratis: sin energía, sin gemas, sin anuncios, sin suscripción.</p>`;
   $("lo").oninput=e=>{S.yo.locura=+e.target.value;$("lv").textContent=LOCURA[S.yo.locura-1];save()};
+  $("edy").onclick=()=>{editYo={name:S.yo.name,emoji:S.yo.emoji||"",bio:S.yo.bio,fandoms:S.yo.fandoms.join(", "),escenario:S.yo.escenario};render()};
   $("rs").onclick=()=>$("cf").classList.remove("hidden");
   $("rsy").onclick=async()=>{S=null;setup=null;try{localStorage.removeItem("estado_juego_v2");localStorage.removeItem("estado_juego")}catch(e){}
     if(db&&userId){try{await db.collection("data/users/"+userId).doc("juego").delete()}catch(e){}} view="feed";render()};
 }
 
-nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(busy)return;view=b.dataset.v;if(view!=="mensajes")openChat=null;render();window.scrollTo(0,0)});
+nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(busy)return;view=b.dataset.v;charForm=null;editYo=null;if(view!=="mensajes")openChat=null;render();window.scrollTo(0,0)});
 
 (async()=>{
   if(typeof claude!=="undefined") claude.use("sample").then(s=>{sample=s;if(!S)render()}).catch(()=>{});
