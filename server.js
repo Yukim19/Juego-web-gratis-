@@ -1,12 +1,19 @@
 // Servidor de fama.: sirve index.html y hace de proxy a la API de Claude.
-// Uso: ANTHROPIC_API_KEY=sk-ant-... node server.js   (Node 18+, sin dependencias)
+// Dos modos de IA:
+//  - API:  ANTHROPIC_API_KEY=sk-ant-... node server.js   (se paga por uso)
+//  - CLI:  node server.js   (sin clave: usa tu Claude Code con sesión iniciada, gasta de tu suscripción)
+// Fuerza uno con FAMA_BACKEND=api|cli. Node 18+, sin dependencias.
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
+const { spawn } = require("child_process");
 const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 const KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = process.env.FAMA_MODEL || "claude-haiku-5-5";
+const BACKEND = process.env.FAMA_BACKEND || (KEY ? "api" : "cli");
+const MODEL = process.env.FAMA_MODEL || (BACKEND === "cli" ? "haiku" : "claude-haiku-5-5");
+const SYSTEM = "Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después ni bloques de código.";
 const MAX_PROMPT = 12000;          // caracteres
 const LIMIT = 20, WINDOW = 60000;  // 20 peticiones por minuto por IP
 
@@ -32,13 +39,36 @@ async function callClaude(prompt) {
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
       model: MODEL, max_tokens: 2000,
-      system: "Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después ni bloques de código.",
+      system: SYSTEM,
       messages: [{ role: "user", content: prompt }],
     }),
   });
   if (!r.ok) throw new Error("API " + r.status + " " + (await r.text()).slice(0, 200));
   const d = await r.json();
   return extractJSON(d.content.map(c => c.text || "").join(""));
+}
+
+// Modo CLI: una petición a la vez (cada una abre un proceso de claude).
+let cola = Promise.resolve();
+function callCLI(prompt) {
+  const run = () => new Promise((res, rej) => {
+    const p = spawn("claude", ["-p", "--model", MODEL, "--tools", "", "--disable-slash-commands",
+      "--no-session-persistence", "--system-prompt", SYSTEM], { cwd: os.tmpdir() });
+    let out = "", err = "";
+    const timer = setTimeout(() => { p.kill(); rej(new Error("timeout")); }, 90000);
+    p.stdout.on("data", d => out += d);
+    p.stderr.on("data", d => err += d);
+    p.on("error", e => { clearTimeout(timer); rej(new Error("no se pudo ejecutar 'claude': " + e.message)); });
+    p.on("close", code => {
+      clearTimeout(timer);
+      if (code !== 0) return rej(new Error("claude salió con " + code + " " + err.slice(0, 200)));
+      try { res(extractJSON(out)); } catch (e) { rej(e); }
+    });
+    p.stdin.end(prompt);
+  });
+  const r = cola.then(run, run);
+  cola = r.catch(() => {});
+  return r;
 }
 
 function readBody(req) {
@@ -56,13 +86,13 @@ http.createServer(async (req, res) => {
     return res.end(fs.readFileSync(path.join(__dirname, "index.html")));
   }
   if (req.method === "POST" && req.url === "/api/ai") {
-    if (!KEY) return send(503, { error: "Falta ANTHROPIC_API_KEY" });
+    if (BACKEND === "api" && !KEY) return send(503, { error: "Falta ANTHROPIC_API_KEY" });
     if (limited(req.socket.remoteAddress)) return send(429, { error: "rate_limited" });
     try {
       const { prompt } = JSON.parse(await readBody(req));
       if (typeof prompt !== "string" || !prompt || prompt.length > MAX_PROMPT) return send(400, { error: "prompt inválido" });
-      return send(200, await callClaude(prompt));
+      return send(200, await (BACKEND === "cli" ? callCLI(prompt) : callClaude(prompt)));
     } catch (e) { console.error(e.message); return send(502, { error: "fallo de IA" }); }
   }
   send(404, { error: "no encontrado" });
-}).listen(PORT, () => console.log("fama. en http://localhost:" + PORT + (KEY ? "" : "  (⚠ falta ANTHROPIC_API_KEY)")));
+}).listen(PORT, () => console.log("fama. en http://localhost:" + PORT + "  [IA: " + (BACKEND === "cli" ? "Claude Code (" + MODEL + ")" : KEY ? "API" : "⚠ falta ANTHROPIC_API_KEY") + "]"));
