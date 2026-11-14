@@ -115,7 +115,15 @@ nav button.on svg{stroke:var(--accent)}
 .sheet h3{font-size:20px;font-weight:800;margin:0 0 14px}
 .sheet .opt{background:var(--panel2);border-radius:20px;padding:16px 18px;margin-bottom:10px;cursor:pointer}
 .sheet .opt b{display:block;font-size:17px;font-weight:700;margin-bottom:3px}
-.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin:4px -16px 8px;padding:0 16px}
+.profhead{padding:8px 0 6px}
+.profhead .av{width:84px;height:84px;font-size:36px}
+.profhead .chips{margin-top:10px}
+.counts{display:flex;gap:20px;margin-top:8px;color:var(--muted)}
+.counts b{color:var(--txt);font-size:17px}
+.avrow{display:flex;gap:14px;overflow-x:auto;margin:0 -16px;padding:2px 16px 10px}
+.avrow>div{flex:0 0 auto;text-align:center;width:66px;font-size:12px;color:var(--muted);cursor:pointer}
+.avrow .av{width:62px;height:62px;font-size:24px;margin:0 auto 5px}
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin:4px -16px 8px;padding:0 16px}
 .tabs div{padding:12px 0;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs div.on{color:var(--txt);border-color:var(--accent)}
 </style>
@@ -334,7 +342,8 @@ function applyStats(r){
 
 // ---------- render ----------
 function header(){
-  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span><button class="btn alt sm" id="hm" title="Mis mundos">🏠</button>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span>`;
+  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span><button class="btn alt sm" id="hm" title="Mis mundos">🏠</button>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span><button class="btn alt sm" id="hs2" title="Ajustes">⚙️</button>`;
+  if(!S&&$("hs2")) $("hs2").onclick=()=>{ajView=true;plView=null;charForm=null;arcoView=null;render();window.scrollTo(0,0)};
   if(S&&$("hm")) $("hm").onclick=()=>{if(!busy)salirMundo()};
   const unread=S?Object.values(S.unread||{}).reduce((a,b)=>a+b,0):0;
   nav.querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.v===view);
@@ -343,6 +352,7 @@ function header(){
 function render(){
   nav.classList.toggle("hidden",!S); header();
   if(!S){
+    if(ajView) return renderAjustes();
     if(plView) return renderPlantillas();
     if(charForm) return renderCharForm();
     if(arcoView) return arcoView.m==="edit"?renderArcoEdit():renderArcoPlay();
@@ -567,7 +577,8 @@ function renderFollowers(){
   if(charForm) return renderCharForm();
   const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
   main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Tus personajes</h2><span class="row"><button class="btn alt sm" id="libb">📥</button><button class="btn sm" id="newc">➕ Crear</button></span></div><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>${libPick&&R.lib.length?`<div class="card"><div class="muted">Toca para traer a tu mundo:</div><div class="chips" style="margin-top:6px">${R.lib.filter(l=>!S.chars.some(c=>c.nombre===l.nombre)).map(l=>`<div class="chip" data-li="${l.id}">${esc(l.emoji||"")} ${esc(l.nombre)}</div>`).join("")||'<span class="muted">Ya están todos en tu mundo.</span>'}</div></div>`:libPick?'<div class="card muted">Tu biblioteca está vacía. Crea personajes en 🏠 Inicio → Personajes, o guarda uno con 📚.</div>':""}`+
-  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca">📚</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div></div>
+  <div class="row" style="margin-top:10px"><button class="btn sm" data-dm="${c.id}" style="flex:1">💬 Mensaje</button><button class="btn alt sm" data-pl="${c.id}" style="flex:1">📅 Plan</button><button class="btn alt sm" data-edc="${c.id}" aria-label="Editar">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca" aria-label="Guardar en biblioteca">📚</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
   <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
@@ -672,7 +683,7 @@ Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguid
 }
 
 // ---------- inicio: mundos, arcos, personajes ----------
-let homeTab="mundos", arcoView=null, arcoBusy=false;
+let homeTab="mundos", arcoView=null, arcoBusy=false, perfEdit=false, ajView=false;
 const crearMundo=()=>{setup=nuevoSetup();render();window.scrollTo(0,0)};
 const crearPlantilla=()=>{if(R.plantillas.length>=12)return toast("Máximo 12 plantillas. Borra alguna.");plView={m:"edit",t:{id:null,titulo:"",fandom:"",descripcion:"",meta:"",portada:"",emoji:"🌎",color:COLORS[R.plantillas.length%COLORS.length],personajes:[]},nuevo:false};render();window.scrollTo(0,0)};
 const crearArco=()=>{arcoView={m:"edit",a:{id:null,titulo:"",emoji:"📖",color:COLORS[R.arcos.length%COLORS.length],premisa:"",personajes:"",escenas:5,finales:[{titulo:"",cond:""},{titulo:"",cond:""}]}};render();window.scrollTo(0,0)};
@@ -685,9 +696,38 @@ function abrirCrear(){
   bg.querySelectorAll("[data-o]").forEach(el=>el.onclick=()=>{bg.remove();ops[+el.dataset.o][2]()});
   document.body.appendChild(bg);
 }
+function renderAjustes(){
+  const ia=typeof claude!=="undefined"?"Claude (tu cuenta)":"Servidor del juego";
+  main.innerHTML=`<div class="row"><button class="btn alt sm" id="jbk">←</button><h2 style="margin:0">Ajustes</h2></div>
+  <p class="muted" style="margin:14px 0 6px">Detalles</p>
+  <div class="card"><label style="margin-top:0">Tu nombre</label><input id="jnm" maxlength="30" value="${esc(R.nombre||"")}" placeholder="Cómo quieres que te llamen"></div>
+  <div class="card pick row" id="jps" style="justify-content:space-between"><span>Mis personajes</span><span class="muted">${R.lib.length} ›</span></div>
+  <p class="muted" style="margin:14px 0 6px">Juego</p>
+  <div class="card"><div class="row" style="justify-content:space-between"><span>Idioma</span><span class="muted">Español</span></div><div class="row" style="justify-content:space-between;margin-top:12px"><span>La IA corre en</span><span class="muted">${ia}</span></div>
+  <p class="muted" style="margin:12px 0 0">Sin energía, sin gemas, sin anuncios y sin suscripción: fama. es 100% gratis.</p></div>
+  <p class="muted" style="margin:14px 0 6px">Copia de seguridad</p>
+  <div class="card"><p class="muted" style="margin-top:0">Tu partida se guarda en este navegador${typeof claude!=="undefined"?" y en tu cuenta de Claude":""}. Copia el texto para guardarlo o pasarlo a otro dispositivo.</p>
+  <div class="row"><button class="btn alt sm" id="jcp">📋 Copiar mi partida</button><button class="btn alt sm" id="jrs">Restaurar</button></div>
+  <div id="jbox" class="hidden" style="margin-top:10px"><textarea id="jtx" placeholder="Pega aquí el texto de tu copia de seguridad"></textarea><button class="btn sm" id="jok" style="margin-top:8px">Restaurar esta copia</button></div></div>
+  <p class="muted" style="margin:14px 0 6px">Datos</p>
+  <div class="card"><button class="btn alt" id="jdl" style="color:var(--bad)">🗑 Borrar todos mis datos</button><p class="muted" style="margin:10px 0 0">Borra mundos, plantillas, arcos y personajes de este dispositivo.</p></div>
+  <p class="muted" style="text-align:center;margin-top:18px">fama. · versión 3</p>`;
+  $("jbk").onclick=()=>{R.nombre=$("jnm").value.trim();ajView=false;save();render()};
+  $("jps").onclick=()=>{R.nombre=$("jnm").value.trim();ajView=false;homeTab="personajes";save();render()};
+  $("jnm").onchange=()=>{R.nombre=$("jnm").value.trim();save()};
+  $("jcp").onclick=async()=>{const t=JSON.stringify(R);let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){}
+    if(ok) toast("📋 Copiado. Guárdalo en un lugar seguro.");else{$("jbox").classList.remove("hidden");$("jtx").value=t;$("jtx").select();toast("Copia el texto de la caja manualmente.")}};
+  $("jrs").onclick=()=>$("jbox").classList.toggle("hidden");
+  $("jok").onclick=()=>{let o;try{o=JSON.parse($("jtx").value)}catch(e){return toast("Ese texto no es una copia válida.")}
+    if(!o||(o.v!==3&&!o.yo)) return toast("Ese texto no es una copia de fama.");
+    if($("jok").dataset.ok!=="1"){$("jok").dataset.ok="1";$("jok").textContent="Esto reemplaza todo. Toca otra vez";return}
+    R=fromAny(o);S=null;setup=null;R.inicio=true;ajView=false;save();toast("Copia restaurada");render()};
+  $("jdl").onclick=()=>{if($("jdl").dataset.ok!=="1"){$("jdl").dataset.ok="1";$("jdl").textContent="¿Seguro? Toca otra vez para borrar todo";return}
+    R=nuevoR();S=null;ajView=false;setup=null;try{localStorage.removeItem("fama_v3");localStorage.removeItem("estado_juego_v2")}catch(e){}save();toast("Datos borrados");render()};
+}
 function renderHome(){
   const ws=Object.values(R.worlds).sort((a,b)=>b.t-a.t);
-  const tabs=[["mundos","🌎 Mundos"],["arcos","📖 Arcos"],["personajes","👥 Personajes"]];
+  const tabs=[["mundos","Mundos"],["arcos","Arcos"],["personajes","Personajes"],["perfil","Perfil"]];
   let h=`<div class="tabs">${tabs.map(([k,l])=>`<div class="${homeTab===k?"on":""}" data-tab="${k}">${l}</div>`).join("")}</div>`;
   if(homeTab==="mundos"){
     h+=`<h2>Seguir jugando</h2>`+(ws.length?`<div class="hscroll">`+ws.map(w=>{const e=w.estado,m=e.meta;
@@ -704,6 +744,18 @@ function renderHome(){
       return `<div class="card"><div class="row"><div class="av" style="background:${a.color};border-radius:12px">${esc(a.emoji||"📖")}</div><div style="min-width:0"><div class="name">${esc(a.titulo)}</div><div class="handle">${a.escenas} escenas · ${P.vistos.length}/${a.finales.length} finales</div></div></div>
       <div class="muted" style="margin:8px 0">${esc(a.premisa.slice(0,140))}${a.premisa.length>140?"…":""}</div>
       <div class="row"><button class="btn sm" data-aplay="${a.id}" style="flex:1">${P.actual&&!P.actual.fin?"▶ Continuar":"▶ Jugar"}</button><button class="btn alt sm" data-aedit="${a.id}">✏️</button></div></div>`}).join(""):`<div class="card"><p class="muted">No tienes arcos. Crea uno con ➕.</p></div>`);
+  } else if(homeTab==="perfil"){
+    const fin=R.arcos.reduce((n,a)=>n+((R.arcoProg[a.id]||{vistos:[]}).vistos.length),0);
+    if(perfEdit){
+      h+=`<div class="card"><h2 style="margin-top:0">Editar perfil</h2><div style="text-align:center"><div id="pav" style="cursor:pointer;display:inline-block">${av(R.nombre||"Jugador","#4a9df5",0,R.avatar)}</div><div class="muted">Toca para cambiar la foto</div><input id="pfl" type="file" accept="image/*" class="hidden">${R.avatar?`<button class="btn alt sm" id="pnf" style="margin-top:6px">Quitar foto</button>`:""}</div>
+      <label>Tu nombre</label><input id="pnm" maxlength="30" value="${esc(R.nombre||"")}" placeholder="Cómo quieres que te llamen"><div class="row" style="margin-top:14px"><button class="btn alt" id="pcn">Cancelar</button><button class="btn" id="psv2">Guardar</button></div></div>`;
+    } else {
+      h+=`<div class="profhead">${av(R.nombre||"Jugador","#4a9df5",0,R.avatar)}<div class="name" style="font-size:26px;font-weight:800;margin-top:12px">${esc(R.nombre||"Jugador")}</div>
+      <div class="counts"><span><b>${Object.keys(R.worlds).length}</b> Mundos</span><span><b>${R.lib.length}</b> Personajes</span><span><b>${fin}</b> Finales</span></div>
+      <button class="btn alt" id="pedit" style="width:100%;margin-top:14px">Editar perfil</button><button class="btn alt" id="paj" style="width:100%;margin-top:8px">⚙️ Ajustes</button></div>
+      <div class="row sec"><h2 style="margin:18px 0 10px">Personajes (${R.lib.length})</h2><button class="link" id="pvt">Ver todo</button></div>
+      ${R.lib.length?`<div class="avrow">${R.lib.map(c=>`<div data-ledit="${c.id}">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div>${esc(c.nombre.split(" ")[0])}</div></div>`).join("")}</div>`:`<p class="muted">Tu biblioteca está vacía. Crea personajes con ＋ Crear.</p>`}`;
+    }
   } else {
     h+=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Mis personajes</h2><button class="btn sm" id="lnew">➕ Crear</button></div>
     <p class="muted">Tu biblioteca. Puedes traerlos a cualquier mundo (pestaña Seguidores → 📥) o a una plantilla. Solo personajes originales.</p>`+
@@ -711,6 +763,14 @@ function renderHome(){
   }
   main.innerHTML=h+`<button class="fab" id="fab">＋ Crear</button>`;
   $("fab").onclick=abrirCrear;
+  if($("pedit")) $("pedit").onclick=()=>{perfEdit=true;render()};
+  if($("paj")) $("paj").onclick=()=>{ajView=true;render();window.scrollTo(0,0)};
+  if($("pvt")) $("pvt").onclick=()=>{homeTab="personajes";render()};
+  if($("pcn")) $("pcn").onclick=()=>{perfEdit=false;render()};
+  if($("pav")) $("pav").onclick=()=>$("pfl").click();
+  if($("pfl")) $("pfl").onchange=e=>{const fl=e.target.files[0];if(fl){R.nombre=$("pnm").value.trim();leerAvatar(fl,d=>{R.avatar=d;save();render()})}};
+  if($("pnf")) $("pnf").onclick=()=>{R.nombre=$("pnm").value.trim();R.avatar="";save();render()};
+  if($("psv2")) $("psv2").onclick=()=>{R.nombre=$("pnm").value.trim();perfEdit=false;save();toast("Perfil guardado");render()};
   main.querySelectorAll("[data-hplay]").forEach(b=>b.onclick=()=>iniciarPlantilla(R.plantillas.find(x=>x.id===b.dataset.hplay)));
   main.querySelectorAll("[data-tab]").forEach(c=>c.onclick=()=>{homeTab=c.dataset.tab;render()});
   main.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>abrirMundo(b.dataset.open));
@@ -942,9 +1002,16 @@ function renderProfile(){
   const s=S.stats, nv=nivel(), xpNext=Math.pow(nv,2)*40, xpPrev=Math.pow(nv-1,2)*40;
   const pct=Math.round(((s.xp-xpPrev)/(xpNext-xpPrev))*100);
   const meter=(lbl,v,col)=>`<div class="muted">${lbl} ${v}/100</div><div class="bar"><i style="width:${v}%;background:${col}"></i></div>`;
-  main.innerHTML=`<div class="card"><div class="row">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}<div><div class="name" style="font-size:18px">${esc(S.yo.name)}${S.cancelado?'<span class="badge" style="background:#3a1818;color:#ff9b9b">cancelado</span>':""}</div><div class="handle">@${esc(S.yo.handle)} · ${esc(S.yo.escenario)}</div></div></div>
-  <div class="body" style="margin:10px 0">${esc(S.yo.bio)}</div><div class="chips">${S.yo.fandoms.map(f=>`<div class="chip on">${esc(f)}</div>`).join("")}</div>
-  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn alt sm" id="edy">✏️ Editar perfil y escenario</button><button class="btn alt sm" id="pls">🌎 Plantillas de mundo</button></div></div>${metaCard()}
+  main.innerHTML=`<div class="profhead">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}
+  <div class="name" style="font-size:26px;font-weight:800;margin-top:12px">${esc(S.yo.name)}${S.cancelado?'<span class="badge" style="background:#3a1818;color:#ff9b9b">cancelado</span>':""}</div>
+  <div class="handle" style="font-size:14px">@${esc(S.yo.handle)} · ${esc(S.yo.escenario.slice(0,60))}</div>
+  <div class="counts"><span><b>${fmt(s.seguidores)}</b> Seguidores</span><span><b>${S.chars.length}</b> Personajes</span></div>
+  ${S.yo.bio?`<div class="body" style="margin:10px 0">${esc(S.yo.bio)}</div>`:""}<div class="chips">${S.yo.fandoms.map(f=>`<div class="chip on">${esc(f)}</div>`).join("")}</div>
+  <button class="btn alt" id="edy" style="width:100%;margin-top:14px">Editar perfil y escenario</button>
+  <button class="btn alt" id="pls" style="width:100%;margin-top:8px">🌎 Plantillas de mundo</button></div>
+  <div class="row sec"><h2 style="margin:18px 0 10px">Personajes (${S.chars.length})</h2><button class="link" id="vt">Ver todo</button></div>
+  <div class="avrow">${[...S.chars].sort((a,b)=>b.afinidad-a.afinidad).map(c=>`<div data-vc="${c.id}">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div>${esc(c.nombre.split(" ")[0])}</div></div>`).join("")}</div>
+  ${metaCard()}
   <div class="card stats"><div><b>${fmt(s.seguidores)}</b><span>seguidores</span></div><div><b>${fmt(s.likesTot)}</b><span>likes</span></div><div><b>${nv}</b><span>nivel</span></div></div>
   <div class="card"><div class="muted">XP ${fmt(s.xp)} → nivel ${nv+1} en ${fmt(xpNext)}</div><div class="bar"><i style="width:${clamp(pct,0,100)}%;background:var(--accent2)"></i></div>
   ${meter("😂 Humor",s.humor,"#ffb547")}${meter("✨ Aura",s.aura,"#7c5cff")}${meter("🌶️ Drama",s.drama,s.drama>70?"#ff4d4d":"#ff5c8a")}</div>
@@ -954,6 +1021,8 @@ function renderProfile(){
   <p class="muted" style="text-align:center">fama es 100% gratis: sin energía, sin gemas, sin anuncios, sin suscripción.</p>`;
   $("lo").oninput=e=>{S.yo.locura=+e.target.value;$("lv").textContent=LOCURA[S.yo.locura-1];save()};
   $("pls").onclick=()=>{plView={m:"list"};render()};
+  $("vt").onclick=()=>{view="seguidores";render()};
+  main.querySelectorAll("[data-vc]").forEach(d=>d.onclick=()=>{openChat=d.dataset.vc;view="mensajes";render()});
   $("edy").onclick=()=>{editYo={name:S.yo.name,emoji:S.yo.emoji||"",bio:S.yo.bio,fandoms:S.yo.fandoms.join(", "),escenario:S.yo.escenario};render()};
   $("rs").onclick=()=>$("cf").classList.remove("hidden");
   $("rsy").onclick=()=>{delete R.worlds[R.actual];R.actual=null;S=null;setup=null;view="feed";save();render();toast("Mundo borrado")};
