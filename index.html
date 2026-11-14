@@ -163,7 +163,8 @@ const ESCENARIOS=[
  ["🦸","Superhéroe secreto","Nadie sabe tu identidad secreta… todavía"],
  ["👑","Realeza","Eres príncipe o princesa de un reino ficticio y la prensa te persigue"],
  ["🕵️","Detective","Resuelves misterios y publicas pistas en tiempo real"]];
-const RELACIONES=["amigos","mejores amigos","rivales","mentor","compañeros de equipo","familia","fan número 1","némesis"];
+const RELACIONES=["amigos","mejores amigos","rivales","mentor","compañeros de equipo","familia","fan número 1","némesis","crush","pareja","ex"];
+const ROMANCE="Se permite romance suave y sano (flirteo, crushes, citas, celos, parejas), siempre apto 13+: nunca contenido sexual ni explícito.";
 const ACTIVIDADES=["Ir a la playa","Grabar un TikTok juntos","Ir a un concierto","Estudiar juntos","Hacer un live","Cocinar juntos","Ir de compras","Jugar videojuegos","Viaje de fin de semana","Colaboración en un post"];
 const LOCURA=["Realista","Un poco loco","Dramático","Caótico","Locura total"];
 const LOGROS=[
@@ -191,9 +192,9 @@ const fmt=n=>{n=Math.round(n||0);return n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const num=(v,d=0)=>Number.isFinite(+v)?+v:d;
 const av=(n,c,s,e)=>e&&String(e).startsWith("data:image")?`<div class="av${s?" s":""}" style="background:${c} url(${e}) center/cover no-repeat"></div>`:`<div class="av${s?" s":""}" style="background:${c}">${e?esc(e):esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
-const CAMPOS=["nombre","usuario","bio","personalidad","relacion","emoji","color","fama","genero","foto","extra"];
+const CAMPOS=["nombre","usuario","bio","personalidad","relacion","emoji","color","fama","genero","foto","extra","pareja"];
 const copiaChar=c=>{const o={};CAMPOS.forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});return o};
-const formVacio=i=>({nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[i%COLORS.length],fama:5000,genero:"",foto:"",extra:""});
+const formVacio=i=>({nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[i%COLORS.length],fama:5000,genero:"",foto:"",extra:"",pareja:""});
 const GENEROS=["Masculino","Femenino","No binario"], FAMAS=[[1e3,"1K+"],[5e3,"5K+"],[1e4,"10K+"],[2e4,"20K+"],[5e4,"50K+"],[1e5,"100K+"]];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let toastQ=[],toastOn=false;
@@ -202,7 +203,7 @@ function nextToast(){const t=toastQ.shift();if(!t){toastOn=false;return}toastOn=
   const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);
   setTimeout(()=>{d.remove();nextToast()},toastQ.length?1800:3000)}
 const charById=id=>S.chars.find(c=>c.id===id);
-const MUNDO0="Juego de simulación de red social en español (tono latino/boricua, apto 13+, todo ficticio y original: nada de personas reales ni personajes con derechos de autor).";
+const MUNDO0="Juego de simulación de red social en español (tono latino/boricua, apto 13+, todo ficticio y original: nada de personas reales ni personajes con derechos de autor). "+ROMANCE;
 const uh=u=>esc(String(u||"").replace(/^@+/,""));
 const nivel=()=>Math.floor(Math.sqrt((S.stats.xp||0)/40))+1;
 const relTxt=a=>a>=85?"💞":a>=65?"😊":a>=40?"🙂":a>=20?"😬":"😤";
@@ -308,11 +309,11 @@ function aiError(e){
 }
 function mundo(){
   const y=S.yo;
-  return `Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni romántico explícito, sin personas reales ni personajes con derechos de autor: todo es ficticio y original).
+  return `Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni explícito; ${ROMANCE} Sin personas reales ni personajes con derechos de autor: todo es ficticio y original).
 Jugador: ${y.name} (@${y.handle}). Bio: "${y.bio}". Escenario: ${y.escenario}. Fandoms: ${y.fandoms.join(", ")}. Nivel de locura del mundo: ${LOCURA[y.locura-1]} (${y.locura}/5).
 Stats: ${fmt(S.stats.seguidores)} seguidores, nivel ${nivel()}, humor ${S.stats.humor}/100, aura ${S.stats.aura}/100, drama ${S.stats.drama}/100${S.cancelado?". ¡ESTÁ CANCELADO! La gente está molesta con él/ella.":""}.${S.meta&&!S.meta.cumplida?`\nMETA del jugador en este mundo: "${S.meta.texto}" (progreso ${S.meta.progreso}/100). Si sus acciones la acercan o alejan, refléjalo en "progresoMeta" (entero de -10 a 25; 0 si no tiene relación).`:""}`;
 }
-function charLine(c){return `- id:${c.id} | ${c.nombre} (@${c.usuario}) | ${c.personalidad} | relación: ${c.relacion}${c.genero?` | género: ${c.genero}`:""}${c.extra?` | detalles: ${c.extra}`:""} | afinidad ${c.afinidad}/100${c.memoria?.length?` | recuerda: ${c.memoria.slice(-4).join("; ")}`:""}`}
+function charLine(c){return `- id:${c.id} | ${c.nombre} (@${c.usuario}) | ${c.personalidad} | relación: ${c.relacion}${c.pareja?` | pareja: ${c.pareja==="yo"?S.yo.name+" (el jugador)":c.pareja}`:""}${c.genero?` | género: ${c.genero}`:""}${c.extra?` | detalles: ${c.extra}`:""} | afinidad ${c.afinidad}/100${c.memoria?.length?` | recuerda: ${c.memoria.slice(-4).join("; ")}`:""}`}
 function addMemoria(id,txt){const c=charById(id);if(c&&txt){c.memoria=c.memoria||[];c.memoria.push(String(txt).slice(0,140))}}
 function addNPCPosts(list){
   (list||[]).slice(0,3).forEach(n=>{if(!n||!n.texto)return;
@@ -320,7 +321,7 @@ function addNPCPosts(list){
     if(n.esNoticia) S.stats.noticias=(S.stats.noticias||0)+1;
   });
 }
-function newChar(n,i,af=50){return {emoji:n.emoji||"",genero:n.genero||"",foto:n.foto||"",extra:n.extra||"",id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:n.color||COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
+function newChar(n,i,af=50){return {emoji:n.emoji||"",genero:n.genero||"",foto:n.foto||"",extra:n.extra||"",pareja:n.pareja||"",id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:n.color||COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
 function checkLogros(){
   const s=S.stats,has=k=>S.logros.includes(k),add=k=>{if(!has(k)){S.logros.push(k);const l=LOGROS.find(x=>x[0]===k);toast(`🏆 Logro: ${l[2]}`)}};
   if(S.feed.some(p=>p.tipo==="mio"&&!p.auto))add("primer");
@@ -411,7 +412,7 @@ function renderSetup(){
       try{
         if(setup.plantilla&&setup.plantilla.personajes.length){setup.cands=setup.plantilla.personajes.slice(0,8).map((c,i)=>newChar(c,i));setup.paso=3;render();return}
         const esc2=setup.escenario||setup.custom;
-        const r=await ai(`Juego de simulación de red social en español (tono latino, apto 13+, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor).
+        const r=await ai(`Juego de simulación de red social en español (tono latino, apto 13+, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor). ${ROMANCE}
 Jugador: ${setup.name} (@${setup.handle}). Bio: "${setup.bio}". Escenario: ${esc2}. Fandoms: ${fandoms.join(", ")}. Locura del mundo: ${LOCURA[setup.locura-1]}.
 Crea 6 personajes originales que encajen en este mundo y fandoms, muy distintos entre sí (ej. fan obsesionado, crítico sarcástico, alguien tierno, celebridad del fandom, rival, alguien misterioso). Asigna a cada uno la relación inicial que tendría con el jugador.
 Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea","personalidad":"rasgos y forma de hablar","fama":entero 200-5000000,"relacion":"una de: ${RELACIONES.join(", ")}"}]}`);
@@ -543,6 +544,7 @@ function renderCharForm(){
   <label>Descripciones adicionales (opcional)</label><textarea id="cx" maxlength="400" style="min-height:50px" placeholder="Rasgos, historias, manías… influyen en cómo actúa el personaje">${esc(f.extra)}</textarea>
   <div class="row" style="margin-top:8px"><button class="btn alt sm" id="cai">✨ Completar con IA</button><span class="muted">Llena los campos vacíos usando lo que ya escribiste.</span></div>
   <label>Relación contigo</label><select id="cr">${RELACIONES.map(x=>`<option${x===f.relacion?" selected":""}>${x}</option>`).join("")}</select>
+  <label>Pareja (opcional) 💞</label><div class="chips" id="cpa"><div class="chip${!f.pareja?" on":""}" data-pa="">Sin pareja</div><div class="chip${f.pareja==="yo"?" on":""}" data-pa="yo">💞 ${f.lib?"Mi jugador":esc(S?S.yo.name:"Mi jugador")}</div>${(f.lib?R.lib:(S?S.chars:[])).filter(c=>c.nombre!==f.nombre).slice(0,14).map(c=>`<div class="chip${f.pareja===c.nombre?" on":""}" data-pa="${esc(c.nombre)}">${esc(c.nombre)}</div>`).join("")}</div>
   <label>Emoji de avatar (opcional)</label><input id="ce" maxlength="4" value="${esc(f.emoji)}" placeholder="😎">
   <label>Color</label><div class="chips" id="cc">${COLORS.map(c=>`<div class="chip${c===f.color?" on":""}" data-col="${c}" style="background:${c};border-color:${c===f.color?"#fff":c};width:34px;height:34px;padding:0"></div>`).join("")}</div>
   <label>Cantidad de seguidores</label><div class="chips">${FAMAS.map(([n,l])=>`<div class="chip${f.fama===n?" on":""}" data-fm="${n}">${l}</div>`).join("")}</div>
@@ -556,6 +558,7 @@ function renderCharForm(){
   $("cfile").onchange=e=>{const fl=e.target.files[0];if(fl){read();leerAvatar(fl,d=>{f.foto=d;renderCharForm()})}};
   if($("cnof")) $("cnof").onclick=()=>{read();f.foto="";renderCharForm()};
   main.querySelectorAll("[data-gn]").forEach(c=>c.onclick=()=>{read();f.genero=f.genero===c.dataset.gn?"":c.dataset.gn;renderCharForm()});
+  main.querySelectorAll("[data-pa]").forEach(c=>c.onclick=()=>{read();f.pareja=c.dataset.pa;if(f.pareja==="yo"&&!["pareja","crush"].includes(f.relacion))f.relacion="pareja";renderCharForm()});
   main.querySelectorAll("[data-fm]").forEach(c=>c.onclick=()=>{read();f.fama=+c.dataset.fm;renderCharForm()});
   if($("cdl")) $("cdl").onclick=()=>{ if(!f.confirmDel){f.confirmDel=true;$("cdl").textContent="¿Seguro? Toca otra vez";return}
     if(f.lib){R.lib=R.lib.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render();return}
@@ -570,15 +573,18 @@ Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea
       if(!f.bio&&x.bio)f.bio=String(x.bio).slice(0,120); if(!f.personalidad&&x.personalidad)f.personalidad=String(x.personalidad).slice(0,300);
       renderCharForm();
     }catch(e){aiError(e);$("cai").disabled=false;$("ctp").classList.add("hidden")}};
+  const parejaRec=()=>{const pool=f.lib?R.lib:S.chars;
+    pool.forEach(o=>{if(o.nombre!==f.nombre&&o.pareja===f.nombre&&f.pareja!==o.nombre)o.pareja=""});
+    if(f.pareja&&f.pareja!=="yo"){const o=pool.find(x=>x.nombre===f.pareja);if(o){o.pareja=f.nombre;if(!f.lib&&!["pareja","crush"].includes(o.relacion))o.relacion="pareja"}}};
   $("csv").onclick=()=>{read(); if(!f.nombre) return toast("Ponle un nombre al personaje.");
     if(!f.usuario) f.usuario=f.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9._]/g,"")||"user";
     if(f.lib){const dat={...copiaChar(f),personalidad:f.personalidad||"amigable y natural"};
       if(f.id){Object.assign(R.lib.find(c=>c.id===f.id),dat);toast("Personaje actualizado")}
       else{if(R.lib.length>=60)return toast("Tu biblioteca está llena (60).");R.lib.push({id:"l"+uid(),...dat});toast("📚 Guardado en tu biblioteca")}
-      charForm=null;save();render();return}
-    if(f.id){const c=charById(f.id);Object.assign(c,{...copiaChar(f),personalidad:f.personalidad||c.personalidad});toast("Personaje actualizado")}
+      parejaRec();charForm=null;save();render();return}
+    if(f.id){const c=charById(f.id);Object.assign(c,{...copiaChar(f),personalidad:f.personalidad||c.personalidad});parejaRec();toast("Personaje actualizado")}
     else{ if(S.chars.length>=30) return toast("Ya tienes 30 personajes. Borra alguno primero.");
-      const n=newChar({...f,personalidad:f.personalidad||"amigable y natural"},S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te creó como personaje`);toast(`✨ ${n.nombre} ya está en tu mundo`)}
+      const n=newChar({...f,personalidad:f.personalidad||"amigable y natural"},S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te creó como personaje`);parejaRec();toast(`✨ ${n.nombre} ya está en tu mundo`)}
     charForm=null;save();render()};
 }
 function renderFollowers(){
@@ -588,7 +594,7 @@ function renderFollowers(){
   sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div></div>
   <div class="row" style="margin-top:10px"><button class="btn sm" data-dm="${c.id}" style="flex:1">💬 Mensaje</button><button class="btn alt sm" data-pl="${c.id}" style="flex:1">📅 Plan</button><button class="btn alt sm" data-edc="${c.id}" aria-label="Editar">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca" aria-label="Guardar en biblioteca">📚</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
-  <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
+  <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div>${c.pareja?`<div class="muted">💞 Pareja: ${esc(c.pareja==="yo"?S.yo.name:c.pareja)}</div>`:""}<div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
   ${c.memoria?.length?`<div class="muted" style="margin-top:8px">🧠 Recuerda: ${esc(c.memoria.slice(-3).join(" · "))}</div>`:""}</div>`).join("");
   $("newc").onclick=()=>{charForm={id:null,...formVacio(S.chars.length)};render()};
@@ -838,7 +844,7 @@ async function arcoTurno(a,eleccion){
   render();
   try{
     const n=A.hist.length+1, ult=n>=a.escenas;
-    const r=await ai(`${MUNDO0} Sin contenido sexual ni romántico explícito.
+    const r=await ai(`${MUNDO0}
 Historia interactiva (un "arco") llamada "${a.titulo}". Premisa: ${a.premisa}
 Personajes: ${a.personajes||"inventa los que necesites (originales)"}.
 Protagonista: ${A.nombre}; háblale en segunda persona ("tú").
@@ -969,7 +975,7 @@ function renderPlantillas(){
     v.nuevo=false;render()};
   $("pai").onclick=async()=>{read();if(!t.titulo&&!t.fandom&&!t.descripcion)return toast("Escribe al menos un título o un fandom.");
     $("pai").disabled=true;$("ptp").classList.remove("hidden");
-    try{const x=await ai(`Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni romántico explícito). Todo debe ser ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor, aunque el fandom se inspire en un género.
+    try{const x=await ai(`Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni explícito; ${ROMANCE}). Todo debe ser ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor, aunque el fandom se inspire en un género.
 El jugador está creando una plantilla de mundo. Lo que ya escribió: título="${t.titulo}", fandom="${t.fandom}", descripción="${t.descripcion}", meta="${t.meta}". Completa lo que falte sin cambiar lo escrito.
 Personajes que ya tiene: ${t.personajes.map(p=>p.nombre).join(", ")||"ninguno"}. Propón ${Math.max(0,Math.min(5,8-t.personajes.length))} personajes originales nuevos, muy distintos entre sí, que encajen en el mundo.
 Responde SOLO JSON: {"titulo":"","fandom":"","descripcion":"2-4 oraciones","meta":"máx 150 caracteres","personajes":[{"nombre":"","usuario":"","bio":"una línea","personalidad":"rasgos y forma de hablar","fama":entero 200-5000000,"relacion":"una de: ${RELACIONES.join(", ")}"}]}`);

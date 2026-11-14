@@ -7,8 +7,8 @@ pero es 100% gratis: no tiene energía, gemas, anuncios ni suscripción.
 
 **Regla importante:** no copiar el nombre, logo, arte, textos ni código de Status. Solo se replican
 mecánicas de juego (eso no tiene derechos de autor). Todos los personajes que genera la IA deben ser
-originales: nada de personas reales ni personajes con copyright. El contenido es apto para 13+, sin
-romance ni contenido sexual.
+originales: nada de personas reales ni personajes con copyright. El contenido es apto para 13+: se permite
+romance suave y sano (flirteo, crushes, citas, celos, parejas), pero nunca contenido sexual ni explícito.
 
 ## Dueño
 Juan M. Cardona Montañez, estudiante de la Universidad Interamericana de Puerto Rico, Recinto de Fajardo.
@@ -42,6 +42,7 @@ Está publicado como un artifact de claude.ai. Las funciones de IA y de guardado
 - Formulario de personaje (como en Status): foto (se recorta a 160px), nombre, usuario, género, bio, personalidad, "descripciones adicionales" (`extra`, influye en la IA), seguidores con atajos 1K–100K o personalizado, emoji y color. Campos del personaje: ver `CAMPOS` en `index.html`.
 - **Diseño**: tema gris oscuro con acento azul, fuente Plus Jakarta Sans, botones en píldora, barra inferior con iconos SVG, inicio con filas horizontales (mundos y plantillas), botón flotante ＋ Crear con menú inferior. Estilo inspirado en la app de referencia, sin copiar su logo, arte ni textos (el logo y el nombre son propios).
 - **Perfil general** (Inicio → Perfil: foto y nombre, cantidades, biblioteca) y **Ajustes** (⚙️ en el header del inicio): nombre, copia de seguridad (copiar/restaurar la partida como texto), borrar todos los datos. El perfil de cada mundo tiene encabezado grande, carrusel de personajes y botón "Editar perfil y escenario".
+- **Romance suave**: relaciones "crush", "pareja" y "ex", y el campo `pareja` del personaje (ninguna, el jugador o otro personaje; es recíproco entre personajes). La regla de contenido está en la constante `ROMANCE` de `index.html` y se agrega a los prompts.
 - Los ejemplos iniciales (2 plantillas y 1 arco) se siembran en `nuevoR()`.
 
 ### Estructura del estado
