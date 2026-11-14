@@ -36,17 +36,33 @@ Está publicado como un artifact de claude.ai. Las funciones de IA y de guardado
 - Personajes personalizados (crear/editar/borrar, emoji, color, autocompletar con IA) y edición de perfil/escenario.
 - Fuera de claude.ai: `server.js` (modos Gemini, API de Claude o CLI de Claude Code; ver README).
 
-### Estructura del estado `S`
+- **Varios mundos** (v3): pantalla de inicio con "Seguir jugando" (cada mundo es una partida aparte), 🏠 en el header para volver, borrar mundo desde Perfil. Pestañas del inicio: 🌎 Mundos (crear desde cero, plantillas), 📖 Arcos, 👥 Personajes.
+- **Biblioteca de personajes** global (`R.lib`): se crean en Inicio → Personajes, se guardan desde un mundo con 📚 y se traen con 📥 (Seguidores) o desde el editor de plantillas.
+- **Arcos**: historias con N escenas (3-8), 3 opciones por escena (o texto libre) y 2-4 finales; la IA escribe cada escena y cierra con el final que corresponde. Se llevan los finales descubiertos.
+- Los ejemplos iniciales (2 plantillas y 1 arco) se siembran en `nuevoR()`.
+
+### Estructura del estado
+Raíz `R` (guardada en `localStorage["fama_v3"]` y en el doc `juego` del db de artifacts):
+```
+R={v:3, worlds:{[id]:{id,titulo,emoji,color,portada,creado,t,estado:S}}, lib:[personaje...],
+   plantillas:[...], arcos:[{id,titulo,emoji,color,premisa,personajes,escenas,finales:[{titulo,cond}]}],
+   arcoProg:{[arcoId]:{vistos:[],jugadas,actual:{nombre,hist:[{n,e,op}],fin}}}, nombre}
+```
+`migrate()` + `fromAny()` convierten partidas v1/v2 viejas en el primer mundo. `S` = estado del mundo abierto (o `null` en el inicio).
+
+### Estructura del estado `S` (un mundo)
 ```
 {v:2, yo:{name,handle,bio,fandoms[],escenario,locura},
  chars:[{id,nombre,usuario,bio,personalidad,fama,color,afinidad,relacion,memoria[]}],
  feed:[{tipo:"mio"|"npc"|"char", ...}], chats:{[cid]:[{yo,texto}]}, unread:{[cid]:n},
  planes:[{id,cid,actividad,estado:"pendiente"|"hecho",resultado}],
  stats:{seguidores,xp,humor,aura,drama,likesTot,noticias}, logros:[], cancelado,
- plantillas:[{id,titulo,fandom,descripcion,meta,portada,emoji,color,personajes[]}], meta:{texto,progreso,cumplida,titulo}|null}
+
+ meta:{texto,progreso,cumplida,titulo}|null}
 ```
 
 ## Pruebas
+(Las plantillas viven en `R.plantillas`: {id,titulo,fandom,descripcion,meta,portada,emoji,color,personajes[]}.)
 `tests/test_ui.py` abre el juego en Chromium con un `window.claude` simulado (mock) y recorre todo:
 onboarding, post, DM, plan y perfil. Guarda capturas en `tests/screenshots/`.
 ```

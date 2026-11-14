@@ -138,21 +138,31 @@ function nextToast(){const t=toastQ.shift();if(!t){toastOn=false;return}toastOn=
   const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);
   setTimeout(()=>{d.remove();nextToast()},toastQ.length?1800:3000)}
 const charById=id=>S.chars.find(c=>c.id===id);
+const MUNDO0="Juego de simulación de red social en español (tono latino/boricua, apto 13+, todo ficticio y original: nada de personas reales ni personajes con derechos de autor).";
 const uh=u=>esc(String(u||"").replace(/^@+/,""));
 const nivel=()=>Math.floor(Math.sqrt((S.stats.xp||0)/40))+1;
 const relTxt=a=>a>=85?"💞":a>=65?"😊":a>=40?"🙂":a>=20?"😬":"😤";
 
 // ---------- guardar / cargar ----------
 let saveTimer=null;
+let R={v:3,worlds:{},lib:[],plantillas:[],arcos:[],arcoProg:{},actual:null,inicio:false,nombre:""};
+function snap(){
+  if(!S||!R.actual||!R.worlds[R.actual]) return;
+  S.feed=S.feed.slice(0,60);
+  for(const k in S.chats) S.chats[k]=S.chats[k].slice(-40);
+  S.chars.forEach(c=>c.memoria=(c.memoria||[]).slice(-8));
+  S.planes=S.planes.slice(-30);
+  const w=R.worlds[R.actual]; w.estado=S; w.t=Date.now();
+  w.titulo=(S.meta&&S.meta.titulo)||w.titulo||String(S.yo.escenario||"Mi mundo").slice(0,40);
+}
+function flushLocal(){ if(!R) return; snap(); try{localStorage.setItem("fama_v3",JSON.stringify(R))}catch(e){} }
+addEventListener("pagehide",flushLocal);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushLocal()});
 function save(){
-  clearTimeout(saveTimer);
+  snap(); clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
-    S.feed=S.feed.slice(0,60);
-    for(const k in S.chats) S.chats[k]=S.chats[k].slice(-40);
-    S.chars.forEach(c=>c.memoria=(c.memoria||[]).slice(-8));
-    S.planes=S.planes.slice(-30);
-    const data=JSON.stringify(S);
-    try{localStorage.setItem("estado_juego_v2",data)}catch(e){}
+    const data=JSON.stringify(R);
+    try{localStorage.setItem("fama_v3",data)}catch(e){}
     if(db&&userId){try{await db.collection("data/users/"+userId).doc("juego").set({json:data,t:Date.now()})}catch(e){}}
   },400);
 }
@@ -165,18 +175,56 @@ function migrate(o){
     feed:(o.posts||[]).map(p=>({...p,tipo:"mio",t:p.id})),chats:o.chats||{},unread:{},planes:[],
     stats:{seguidores:o.seguidores||0,xp:o.clout||0,humor:10,aura:10,drama:0,likesTot:o.likesTot||0,noticias:0},logros:[],cancelado:false};
 }
+const PLANTILLAS_EJ=[
+ {titulo:"Isla Corsaria",fandom:"Aventura pirata",emoji:"🏴‍☠️",color:"#118ab2",descripcion:"Un archipiélago del Caribe donde las tripulaciones compiten por un mapa legendario. Todo el mundo graba su aventura para las redes desde la cubierta de su barco.",meta:"Reunir una tripulación y encontrar el tesoro de la Isla Corsaria",personajes:[
+  {nombre:"Capitana Marisol",usuario:"marisol.vela",bio:"Capitana del Sirena Roja, nunca pierde una apuesta",personalidad:"Directa, bromista, habla con refranes de mar",fama:90000,relacion:"mentor",emoji:"🦜",color:"#ef476f"},
+  {nombre:"Tito Brújula",usuario:"tito.brujula",bio:"Navegante despistado pero genial",personalidad:"Distraído, simpático, siempre se pierde y lo cuenta riendo",fama:12000,relacion:"mejores amigos",emoji:"🧭",color:"#ffb547"},
+  {nombre:"Barón Cañón",usuario:"baron.canon",bio:"Rival con el barco más grande del puerto",personalidad:"Presumido, dramático, habla como villano de telenovela",fama:250000,relacion:"rivales",emoji:"⚓",color:"#7c5cff"}]},
+ {titulo:"Instituto Estrella Fugaz",fandom:"Instituto",emoji:"🌠",color:"#7c5cff",descripcion:"Un instituto con un concurso de talentos al final del semestre. Los pasillos viven de chismes, ensayos a escondidas y alianzas que cambian cada semana.",meta:"Ganar el concurso de talentos sin perder a tus amigos",personajes:[
+  {nombre:"Daniela Cuerdas",usuario:"dani.cuerdas",bio:"Guitarrista tímida con voz increíble",personalidad:"Tierna, nerviosa, escribe con muchos puntos suspensivos",fama:3000,relacion:"amigos",emoji:"🎸",color:"#3ddc97"},
+  {nombre:"Nico Reflector",usuario:"nico.spotlight",bio:"El más popular, vive para la cámara",personalidad:"Seguro de sí, presumido, siempre pide que lo etiqueten",fama:80000,relacion:"rivales",emoji:"📸",color:"#f72585"},
+  {nombre:"Profe Ramírez",usuario:"profe.ramirez",bio:"Director del concurso, exige perfección",personalidad:"Serio pero justo, usa frases motivacionales",fama:5000,relacion:"mentor",emoji:"📋",color:"#4cc9f0"}]}
+];
+const ARCOS_EJ=[{titulo:"Apagón en el residencial",emoji:"🔦",color:"#ffb547",escenas:5,
+ premisa:"Es una noche de tormenta y se va la luz en todo tu residencial. Los vecinos se asoman a los balcones, la abuela del 3B necesita su medicina refrigerada y alguien dice haber visto una sombra moverse en el estacionamiento.",
+ personajes:"Doña Carmen — vecina mayor, sabia y chismosa\nPipo — adolescente con una linterna y mucha energía\nSr. Ortega — administrador que esconde algo",
+ finales:[{titulo:"La comunidad unida",cond:"El jugador organiza a los vecinos y los ayuda a todos"},{titulo:"Solo en la oscuridad",cond:"El jugador se aísla y no confía en nadie"},{titulo:"El misterio del estacionamiento",cond:"El jugador investiga la sombra y descubre la verdad"}]}];
+const nuevoR=()=>({v:3,worlds:{},lib:[],plantillas:PLANTILLAS_EJ.map(p=>({...p,id:uid(),portada:""})),arcos:ARCOS_EJ.map(a=>({...a,id:uid()})),arcoProg:{},actual:null,inicio:false,nombre:""});
+function fromAny(o){
+  const base=nuevoR();
+  if(!o) return base;
+  if(o.v===3){ return {...base,...o,worlds:o.worlds||{},lib:o.lib||[],plantillas:o.plantillas||[],arcos:o.arcos||[],arcoProg:o.arcoProg||{},actual:null}; }
+  const st=migrate(o); if(!st) return base;
+  if(st.plantillas&&st.plantillas.length) base.plantillas=st.plantillas; delete st.plantillas;
+  const id=uid();
+  base.worlds[id]={id,titulo:(st.meta&&st.meta.titulo)||String(st.yo.escenario||"Mi mundo").slice(0,40),emoji:"🎭",color:COLORS[0],portada:"",creado:Date.now(),t:Date.now(),estado:st};
+  return base;
+}
 async function load(){
+  let o=null;
   try{
     if(typeof claude==="undefined") throw 0;
     const u=await claude.use("user"); db=await claude.use("db");
     if(u&&db){userId=await u.id();
       const snap=await Promise.race([db.collection("data/users/"+userId).doc("juego").get(),new Promise(r=>setTimeout(()=>r(null),8000))]);
       const d=snap&&(snap.data?snap.data():snap);
-      if(d&&d.json) return migrate(JSON.parse(d.json));
+      if(d&&d.json) o=JSON.parse(d.json);
     }
   }catch(e){}
-  try{const l=localStorage.getItem("estado_juego_v2")||localStorage.getItem("estado_juego"); if(l) return migrate(JSON.parse(l))}catch(e){}
-  return null;
+  if(!o){ try{const l=localStorage.getItem("fama_v3")||localStorage.getItem("estado_juego_v2")||localStorage.getItem("estado_juego"); if(l) o=JSON.parse(l)}catch(e){} }
+  return fromAny(o);
+}
+const nuevoSetup=()=>({paso:1,escenario:null,custom:"",fandoms:[],locura:2,cands:null,primero:null});
+function iniciarPlantilla(t){
+  setup={...nuevoSetup(),paso:2,escenario:(t.titulo+": "+t.descripcion).slice(0,700),fandoms:[],plantilla:t};
+  plView=null;render();window.scrollTo(0,0);
+}
+function salirMundo(){
+  snap();save();S=null;R.actual=null;view="feed";openChat=null;plView=null;charForm=null;editYo=null;setup=null;render();window.scrollTo(0,0);
+}
+function abrirMundo(id){
+  const w=R.worlds[id]; if(!w) return;
+  S=w.estado; S.stats=S.stats||{}; R.actual=id; view="feed"; render(); window.scrollTo(0,0);
 }
 
 // ---------- IA ----------
@@ -238,27 +286,35 @@ function applyStats(r){
 
 // ---------- render ----------
 function header(){
-  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span>`;
+  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span><button class="btn alt sm" id="hm" title="Mis mundos">🏠</button>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span>`;
+  if(S&&$("hm")) $("hm").onclick=()=>{if(!busy)salirMundo()};
   const unread=S?Object.values(S.unread||{}).reduce((a,b)=>a+b,0):0;
   nav.querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.v===view);
     b.querySelector(".dot")?.remove(); if(b.dataset.v==="mensajes"&&unread){const d=document.createElement("span");d.className="dot";d.textContent=unread;b.appendChild(d)}});
 }
 function render(){
   nav.classList.toggle("hidden",!S); header();
-  if(!S) return renderSetup();
+  if(!S){
+    if(plView) return renderPlantillas();
+    if(charForm) return renderCharForm();
+    if(arcoView) return arcoView.m==="edit"?renderArcoEdit():renderArcoPlay();
+    if(setup||(!Object.keys(R.worlds).length&&!R.inicio)) return renderSetup();
+    return renderHome();
+  }
   if(view==="perfil"&&plView) return renderPlantillas();
   ({feed:renderFeed,seguidores:renderFollowers,mensajes:renderMessages,planes:renderPlanes,perfil:renderProfile})[view]();
 }
 
 // ---------- setup ----------
 function renderSetup(){
-  setup=setup||{paso:1,escenario:null,custom:"",fandoms:[],locura:2,cands:null,primero:null};
+  setup=setup||nuevoSetup();
   if(setup.paso===1){
     main.innerHTML=`<div class="card"><h2>Sé quien quieras</h2><p class="muted">Escoge un escenario. Tus seguidores serán personajes con IA que reaccionan a todo lo que haces. Sin energía, sin gemas, sin anuncios, sin suscripción.</p>
     ${sample||typeof claude==="undefined"?"":`<div class="notice">Para que los personajes hablen, esta página te pedirá permiso para usar a Claude.</div>`}
     ${ESCENARIOS.map((e,i)=>`<div class="pick${setup.escenario===e[1]?" on":""}" data-i="${i}"><b>${e[0]} ${e[1]}</b><div class="muted">${e[2]}</div></div>`).join("")}
     <label>O inventa el tuyo</label><input id="cu" maxlength="120" placeholder="Ej. Soy un pirata del Caribe con un podcast" value="${esc(setup.custom)}">
-    <div style="margin-top:12px"><button class="btn" id="nx">Siguiente</button></div></div>`;
+    <div class="row" style="margin-top:12px"><button class="btn alt" id="hm0">🏠 Inicio</button><button class="btn" id="nx">Siguiente</button></div></div>`;
+    $("hm0").onclick=()=>{R.inicio=true;setup=null;render()};
     main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.escenario=ESCENARIOS[p.dataset.i][1];setup.custom="";render()});
     $("cu").oninput=e=>{setup.custom=e.target.value;if(e.target.value){setup.escenario=null;main.querySelectorAll(".pick").forEach(p=>p.classList.remove("on"))}};
     $("nx").onclick=()=>{if(!setup.escenario&&!setup.custom.trim())return toast("Escoge o escribe un escenario.");setup.paso=2;render()};
@@ -278,14 +334,16 @@ function renderSetup(){
       if(setup.fandoms.includes(f)){setup.fandoms=setup.fandoms.filter(x=>x!==f);c.classList.remove("on")}
       else if(setup.fandoms.length<3){setup.fandoms.push(f);c.classList.add("on")}});
     $("lo").oninput=e=>{setup.locura=+e.target.value;$("lv").textContent=LOCURA[setup.locura-1]};
-    $("bk").onclick=()=>{setup.paso=1;render()};
+    $("bk").onclick=()=>{if(setup.plantilla){setup=null;render()}else{setup.paso=1;render()}};
     $("go").onclick=async()=>{
       setup.name=$("nm").value.trim();setup.handle=$("hd").value.trim().replace(/[^\w.]/g,"")||"yo";setup.bio=$("bio").value.trim();
       const otro=$("otro").value.trim(); const fandoms=[...setup.fandoms]; if(otro)fandoms.push(otro);
+      if(setup.plantilla&&setup.plantilla.fandom&&!fandoms.includes(setup.plantilla.fandom))fandoms.push(setup.plantilla.fandom);
       if(!setup.name||!fandoms.length) return toast("Pon tu nombre y al menos un fandom.");
       setup.fandomsFinal=fandoms;
       $("go").disabled=true;$("wait").classList.remove("hidden");
       try{
+        if(setup.plantilla&&setup.plantilla.personajes.length){setup.cands=setup.plantilla.personajes.slice(0,8).map((c,i)=>newChar(c,i));setup.paso=3;render();return}
         const esc2=setup.escenario||setup.custom;
         const r=await ai(`Juego de simulación de red social en español (tono latino, apto 13+, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor).
 Jugador: ${setup.name} (@${setup.handle}). Bio: "${setup.bio}". Escenario: ${esc2}. Fandoms: ${fandoms.join(", ")}. Locura del mundo: ${LOCURA[setup.locura-1]}.
@@ -311,6 +369,9 @@ Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea",
     S={v:2,yo:{name:setup.name,handle:setup.handle,bio:setup.bio,fandoms:setup.fandomsFinal,escenario:setup.escenario||setup.custom,locura:setup.locura},
       chars:setup.cands,feed:[],chats:{},unread:{},planes:[],
       stats:{seguidores:setup.cands.length,xp:0,humor:10,aura:10,drama:0,likesTot:0,noticias:0},logros:[],cancelado:false};
+    {const pl=setup.plantilla,id=uid();
+      S.meta=pl&&pl.meta?{texto:pl.meta,progreso:0,cumplida:false,titulo:pl.titulo}:null;
+      R.worlds[id]={id,titulo:pl?pl.titulo:"",emoji:pl?pl.emoji:"🎭",color:pl?pl.color:COLORS[Object.keys(R.worlds).length%COLORS.length],portada:pl?pl.portada:"",creado:Date.now(),t:Date.now(),estado:S};R.actual=id}
     $("go").disabled=true;$("wait").classList.remove("hidden");
     try{
       const p=charById(setup.primero);
@@ -401,10 +462,10 @@ Responde SOLO JSON: {"comentarios":[{"id":"id o vacío","nombre":"si es NPC","us
 }
 
 // ---------- seguidores ----------
-let charForm=null;
+let charForm=null,libPick=false;
 function renderCharForm(){
   const f=charForm;
-  main.innerHTML=`<div class="card"><h2>${f.id?"Editar personaje":"Crear personaje"}</h2>
+  main.innerHTML=`<div class="card"><h2>${f.id?"Editar personaje":"Crear personaje"}${f.lib?" (biblioteca)":""}</h2>
   <p class="muted">Inventa a tu propia gente. Deben ser personajes originales: nada de personas reales ni personajes con derechos de autor.</p>
   <label>Nombre</label><input id="cn" maxlength="40" value="${esc(f.nombre)}" placeholder="Ej. Kiara la influencer">
   <label>Usuario (sin @)</label><input id="cu" maxlength="30" value="${esc(f.usuario)}" placeholder="kiara.vibes">
@@ -421,11 +482,12 @@ function renderCharForm(){
   main.querySelectorAll("[data-col]").forEach(c=>c.onclick=()=>{read();f.color=c.dataset.col;renderCharForm()});
   $("ccn").onclick=()=>{charForm=null;render()};
   if($("cdl")) $("cdl").onclick=()=>{ if(!f.confirmDel){f.confirmDel=true;$("cdl").textContent="¿Seguro? Toca otra vez";return}
+    if(f.lib){R.lib=R.lib.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render();return}
     S.feed=S.feed.filter(p=>p.cid!==f.id);delete S.chats[f.id];delete S.unread[f.id];S.planes=S.planes.filter(p=>p.cid!==f.id);
     S.chars=S.chars.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render()};
   $("cai").onclick=async()=>{read(); if(!f.nombre&&!f.bio&&!f.personalidad) return toast("Escribe al menos un nombre o una idea.");
     $("cai").disabled=true;$("ctp").classList.remove("hidden");
-    try{const x=await ai(`${mundo()}
+    try{const x=await ai(`${S?mundo():MUNDO0}
 El jugador está creando un personaje original (ficticio, apto 13+). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}". Completa lo que falte y no cambies lo que ya está escrito.
 Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea","personalidad":"rasgos y forma de hablar"}`);
       if(!f.nombre&&x.nombre)f.nombre=String(x.nombre).slice(0,40); if(!f.usuario&&x.usuario)f.usuario=String(x.usuario).replace(/^@+/,"").replace(/\s/g,"").slice(0,30);
@@ -434,6 +496,10 @@ Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea
     }catch(e){aiError(e);$("cai").disabled=false;$("ctp").classList.add("hidden")}};
   $("csv").onclick=()=>{read(); if(!f.nombre) return toast("Ponle un nombre al personaje.");
     if(!f.usuario) f.usuario=f.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9._]/g,"")||"user";
+    if(f.lib){const dat={nombre:f.nombre,usuario:f.usuario,bio:f.bio,personalidad:f.personalidad||"amigable y natural",relacion:f.relacion,emoji:f.emoji,color:f.color,fama:f.fama};
+      if(f.id){Object.assign(R.lib.find(c=>c.id===f.id),dat);toast("Personaje actualizado")}
+      else{if(R.lib.length>=60)return toast("Tu biblioteca está llena (60).");R.lib.push({id:"l"+uid(),...dat});toast("📚 Guardado en tu biblioteca")}
+      charForm=null;save();render();return}
     if(f.id){const c=charById(f.id);Object.assign(c,{nombre:f.nombre,usuario:f.usuario,bio:f.bio,personalidad:f.personalidad||c.personalidad,relacion:f.relacion,emoji:f.emoji,color:f.color,fama:f.fama});toast("Personaje actualizado")}
     else{ if(S.chars.length>=30) return toast("Ya tienes 30 personajes. Borra alguno primero.");
       const n=newChar({...f,personalidad:f.personalidad||"amigable y natural"},S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te creó como personaje`);toast(`✨ ${n.nombre} ya está en tu mundo`)}
@@ -442,13 +508,17 @@ Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea
 function renderFollowers(){
   if(charForm) return renderCharForm();
   const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
-  main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Tus personajes</h2><button class="btn sm" id="newc">➕ Crear</button></div><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>`+
-  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Tus personajes</h2><span class="row"><button class="btn alt sm" id="libb">📥</button><button class="btn sm" id="newc">➕ Crear</button></span></div><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>${libPick&&R.lib.length?`<div class="card"><div class="muted">Toca para traer a tu mundo:</div><div class="chips" style="margin-top:6px">${R.lib.filter(l=>!S.chars.some(c=>c.nombre===l.nombre)).map(l=>`<div class="chip" data-li="${l.id}">${esc(l.emoji||"")} ${esc(l.nombre)}</div>`).join("")||'<span class="muted">Ya están todos en tu mundo.</span>'}</div></div>`:libPick?'<div class="card muted">Tu biblioteca está vacía. Crea personajes en 🏠 Inicio → Personajes, o guarda uno con 📚.</div>':""}`+
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca">📚</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
   <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
   ${c.memoria?.length?`<div class="muted" style="margin-top:8px">🧠 Recuerda: ${esc(c.memoria.slice(-3).join(" · "))}</div>`:""}</div>`).join("");
   $("newc").onclick=()=>{charForm={id:null,nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[S.chars.length%COLORS.length],fama:500};render()};
+  $("libb").onclick=()=>{libPick=!libPick;render()};
+  main.querySelectorAll("[data-li]").forEach(b=>b.onclick=()=>{const l=R.lib.find(x=>x.id===b.dataset.li);if(!l||S.chars.length>=30)return;const n=newChar(l,S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te trajo a este mundo`);save();toast(`✨ ${n.nombre} llegó a tu mundo`);render()});
+  main.querySelectorAll("[data-sv]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.sv);if(R.lib.some(l=>l.nombre===c.nombre))return toast("Ya está en tu biblioteca");if(R.lib.length>=60)return toast("Tu biblioteca está llena (60).");
+    R.lib.push({id:"l"+uid(),nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama});save();toast("📚 Guardado en tu biblioteca")});
   main.querySelectorAll("[data-edc]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.edc);charForm={id:c.id,nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama};render()});
   main.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{openChat=b.dataset.dm;view="mensajes";render()});
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{view="planes";render();$("pc").value=b.dataset.pl});
@@ -543,10 +613,149 @@ Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguid
   busy=false; render();
 }
 
+// ---------- inicio: mundos, arcos, personajes ----------
+let homeTab="mundos", arcoView=null, arcoBusy=false;
+function renderHome(){
+  const ws=Object.values(R.worlds).sort((a,b)=>b.t-a.t);
+  const tabs=[["mundos","🌎 Mundos"],["arcos","📖 Arcos"],["personajes","👥 Personajes"]];
+  let h=`<div class="chips" style="margin-bottom:14px">${tabs.map(([k,l])=>`<div class="chip${homeTab===k?" on":""}" data-tab="${k}">${l}</div>`).join("")}</div>`;
+  if(homeTab==="mundos"){
+    h+=`<h2>Seguir jugando</h2>`+(ws.length?ws.map(w=>{const e=w.estado,m=e.meta;
+      return `<div class="card">${portadaHTML({portada:w.portada,emoji:w.emoji,color:w.color},90)}<div class="name" style="margin-top:8px">${esc(w.titulo||"Mi mundo")}</div>
+      <div class="handle">${esc(e.yo.name)} · 👥 ${fmt(e.stats.seguidores)} · Nv ${Math.floor(Math.sqrt((e.stats.xp||0)/40))+1}</div>
+      ${m?`<div class="muted" style="margin-top:4px">🎯 ${esc(m.texto)} ${m.cumplida?"✅":m.progreso+"/100"}</div>`:""}
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-open="${w.id}" style="flex:1">▶ Jugar</button><button class="btn alt sm" data-wdel="${w.id}">🗑</button></div></div>`}).join(""):`<div class="card"><p class="muted">Todavía no tienes mundos. Crea el primero abajo.</p></div>`)+
+    `<h2 style="margin-top:20px">Crear</h2>
+    <div class="card pick" id="hw"><b>🎭 Mundo desde cero</b><div class="muted">Escoge un escenario, crea tu persona y empieza.</div></div>
+    <div class="card pick" id="hp"><b>🌎 Plantillas (${R.plantillas.length})</b><div class="muted">Mundos listos con meta y personajes. Créalas, edítalas o juégalas.</div></div>`;
+  } else if(homeTab==="arcos"){
+    h+=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Arcos</h2><button class="btn sm" id="anew">➕ Crear arco</button></div>
+    <p class="muted">Historias con escenas, decisiones y varios finales. Descubre todos.</p>`+
+    (R.arcos.length?R.arcos.map(a=>{const P=R.arcoProg[a.id]||{vistos:[],actual:null};
+      return `<div class="card"><div class="row"><div class="av" style="background:${a.color};border-radius:12px">${esc(a.emoji||"📖")}</div><div style="min-width:0"><div class="name">${esc(a.titulo)}</div><div class="handle">${a.escenas} escenas · ${P.vistos.length}/${a.finales.length} finales</div></div></div>
+      <div class="muted" style="margin:8px 0">${esc(a.premisa.slice(0,140))}${a.premisa.length>140?"…":""}</div>
+      <div class="row"><button class="btn sm" data-aplay="${a.id}" style="flex:1">${P.actual&&!P.actual.fin?"▶ Continuar":"▶ Jugar"}</button><button class="btn alt sm" data-aedit="${a.id}">✏️</button></div></div>`}).join(""):`<div class="card"><p class="muted">No tienes arcos. Crea uno con ➕.</p></div>`);
+  } else {
+    h+=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Mis personajes</h2><button class="btn sm" id="lnew">➕ Crear</button></div>
+    <p class="muted">Tu biblioteca. Puedes traerlos a cualquier mundo (pestaña Seguidores → 📥) o a una plantilla. Solo personajes originales.</p>`+
+    (R.lib.length?R.lib.map(c=>`<div class="card row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)}</div><div class="muted">${esc(c.bio)}</div></div><button class="btn alt sm" data-ledit="${c.id}">✏️</button></div>`).join(""):`<div class="card"><p class="muted">Tu biblioteca está vacía. Crea un personaje con ➕, o guarda uno de tus mundos con 📚.</p></div>`);
+  }
+  main.innerHTML=h;
+  main.querySelectorAll("[data-tab]").forEach(c=>c.onclick=()=>{homeTab=c.dataset.tab;render()});
+  main.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>abrirMundo(b.dataset.open));
+  main.querySelectorAll("[data-wdel]").forEach(b=>b.onclick=()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return}delete R.worlds[b.dataset.wdel];save();render()});
+  if($("hw")) $("hw").onclick=()=>{setup=nuevoSetup();render()};
+  if($("hp")) $("hp").onclick=()=>{plView={m:"list"};render()};
+  if($("anew")) $("anew").onclick=()=>{arcoView={m:"edit",a:{id:null,titulo:"",emoji:"📖",color:COLORS[R.arcos.length%COLORS.length],premisa:"",personajes:"",escenas:5,finales:[{titulo:"",cond:""},{titulo:"",cond:""}]}};render()};
+  main.querySelectorAll("[data-aedit]").forEach(b=>b.onclick=()=>{arcoView={m:"edit",a:JSON.parse(JSON.stringify(R.arcos.find(x=>x.id===b.dataset.aedit)))};render()});
+  main.querySelectorAll("[data-aplay]").forEach(b=>b.onclick=()=>{arcoView={m:"play",id:b.dataset.aplay};render();window.scrollTo(0,0)});
+  if($("lnew")) $("lnew").onclick=()=>{charForm={lib:true,id:null,nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[R.lib.length%COLORS.length],fama:500};render()};
+  main.querySelectorAll("[data-ledit]").forEach(b=>b.onclick=()=>{const c=R.lib.find(x=>x.id===b.dataset.ledit);charForm={lib:true,id:c.id,nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama};render()});
+}
+
+// ---------- arcos ----------
+function renderArcoEdit(){
+  const v=arcoView,a=v.a;
+  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="abk">←</button><h2 style="margin:0">${a.id?"Editar arco":"Nuevo arco"}</h2></div>
+  <p class="muted">Un arco es una historia con escenas, decisiones y varios finales. Todo debe ser original: nada de personas reales ni personajes con derechos de autor.</p>
+  <label>Título</label><input id="at" maxlength="60" value="${esc(a.titulo)}" placeholder="Ej. Apagón en el residencial">
+  <label>Emoji</label><input id="ae" maxlength="4" value="${esc(a.emoji)}" style="width:80px">
+  <label>Premisa (dónde empieza la historia)</label><textarea id="ap" maxlength="1000" placeholder="Describe la situación inicial y el conflicto">${esc(a.premisa)}</textarea>
+  <label>Personajes (uno por línea: Nombre — cómo es)</label><textarea id="apj" maxlength="800">${esc(a.personajes)}</textarea>
+  ${R.lib.length?`<div class="chips" style="margin-top:6px">${R.lib.map(c=>`<div class="chip" data-lc="${c.id}">+ ${esc(c.nombre)}</div>`).join("")}</div>`:""}
+  <label>Escenas: <b id="aev">${a.escenas}</b></label><input id="aes" type="range" min="3" max="8" value="${a.escenas}">
+  <h3 style="margin-top:14px">Finales posibles (${a.finales.length}/4)</h3>
+  ${a.finales.map((f,i)=>`<div class="card"><label>Título del final</label><input data-ft="${i}" maxlength="50" value="${esc(f.titulo)}"><label>¿Qué debe pasar para llegar aquí?</label><input data-fc="${i}" maxlength="150" value="${esc(f.cond)}">${a.finales.length>2?`<button class="btn alt sm" data-frm="${i}" style="margin-top:8px">✕ Quitar</button>`:""}</div>`).join("")}
+  ${a.finales.length<4?`<button class="btn alt sm" id="afn">➕ Añadir final</button>`:""}
+  <div class="row" style="margin-top:12px"><button class="btn alt sm" id="aai">✨ Completar con IA</button><span class="muted">Llena lo vacío.</span></div>
+  <div class="typing hidden" id="atp">Escribiendo el arco…</div>
+  <div class="row" style="margin-top:14px"><button class="btn alt" id="acn">Cancelar</button><button class="btn" id="asv">Guardar</button>${a.id?`<button class="btn alt" id="adl" style="margin-left:auto">🗑 Borrar</button>`:""}</div></div>`;
+  const read=()=>{a.titulo=$("at").value.trim();a.emoji=$("ae").value.trim()||"📖";a.premisa=$("ap").value.trim();a.personajes=$("apj").value.trim();a.escenas=+$("aes").value;
+    main.querySelectorAll("[data-ft]").forEach(i=>a.finales[+i.dataset.ft].titulo=i.value.trim());main.querySelectorAll("[data-fc]").forEach(i=>a.finales[+i.dataset.fc].cond=i.value.trim())};
+  $("aes").oninput=e=>{$("aev").textContent=e.target.value};
+  $("abk").onclick=$("acn").onclick=()=>{arcoView=null;render()};
+  main.querySelectorAll("[data-lc]").forEach(c=>c.onclick=()=>{read();const l=R.lib.find(x=>x.id===c.dataset.lc);a.personajes=(a.personajes?a.personajes+"\n":"")+`${l.nombre} — ${l.bio||l.personalidad}`;render()});
+  main.querySelectorAll("[data-frm]").forEach(b=>b.onclick=()=>{read();a.finales.splice(+b.dataset.frm,1);render()});
+  if($("afn")) $("afn").onclick=()=>{read();a.finales.push({titulo:"",cond:""});render()};
+  if($("adl")) $("adl").onclick=()=>{if($("adl").dataset.ok!=="1"){$("adl").dataset.ok="1";$("adl").textContent="¿Seguro? Toca otra vez";return}R.arcos=R.arcos.filter(x=>x.id!==a.id);delete R.arcoProg[a.id];arcoView=null;save();render()};
+  $("aai").onclick=async()=>{read();if(!a.titulo&&!a.premisa)return toast("Escribe al menos un título o una idea.");
+    $("aai").disabled=true;$("atp").classList.remove("hidden");
+    try{const x=await ai(`${MUNDO0}
+El jugador está creando un ARCO: una historia interactiva con escenas, decisiones y varios finales. Lo que ya escribió: título="${a.titulo}", premisa="${a.premisa}", personajes="${a.personajes}", finales=${JSON.stringify(a.finales)}. Completa lo que falte sin cambiar lo escrito. Debe haber ${Math.max(2,a.finales.length)} finales (máx 4) claramente distintos según las decisiones del jugador.
+Responde SOLO JSON: {"titulo":"","premisa":"3-5 oraciones","personajes":"Nombre — cómo es, uno por línea (3 personajes)","finales":[{"titulo":"","cond":"qué debe pasar para llegar a este final"}]}`);
+      if(!a.titulo&&x.titulo)a.titulo=String(x.titulo).slice(0,60);if(!a.premisa&&x.premisa)a.premisa=String(x.premisa).slice(0,1000);if(!a.personajes&&x.personajes)a.personajes=String(x.personajes).slice(0,800);
+      const fs=(x.finales||[]).filter(f=>f&&f.titulo).slice(0,4);
+      a.finales=a.finales.map((f,i)=>({titulo:f.titulo||(fs[i]&&String(fs[i].titulo).slice(0,50))||"",cond:f.cond||(fs[i]&&String(fs[i].cond).slice(0,150))||""}));
+      while(a.finales.length<Math.min(4,fs.length))a.finales.push({titulo:String(fs[a.finales.length].titulo).slice(0,50),cond:String(fs[a.finales.length].cond||"").slice(0,150)});
+      render();
+    }catch(e){aiError(e);$("aai").disabled=false;$("atp").classList.add("hidden")}};
+  $("asv").onclick=()=>{read();if(!a.titulo)return toast("Ponle un título.");if(!a.premisa)return toast("Escribe la premisa.");
+    if(a.finales.some(f=>!f.titulo||!f.cond))return toast("Completa el título y la condición de cada final.");
+    if(a.id){const i=R.arcos.findIndex(x=>x.id===a.id);R.arcos[i]=a}else{if(R.arcos.length>=30)return toast("Máximo 30 arcos.");a.id=uid();R.arcos.push(a)}
+    arcoView=null;save();toast("📖 Arco guardado");render()};
+}
+async function arcoTurno(a,eleccion){
+  const P=R.arcoProg[a.id],A=P.actual; if(arcoBusy) return; arcoBusy=true;
+  const prev=A.hist.length?A.hist[A.hist.length-1]:null; if(prev&&eleccion) prev.e=eleccion;
+  render();
+  try{
+    const n=A.hist.length+1, ult=n>=a.escenas;
+    const r=await ai(`${MUNDO0} Sin contenido sexual ni romántico explícito.
+Historia interactiva (un "arco") llamada "${a.titulo}". Premisa: ${a.premisa}
+Personajes: ${a.personajes||"inventa los que necesites (originales)"}.
+Protagonista: ${A.nombre}; háblale en segunda persona ("tú").
+Finales posibles: ${a.finales.map((f,i)=>`${i+1}) "${f.titulo}": ${f.cond}`).join(" | ")}.
+Historia hasta ahora:
+${A.hist.map((h,i)=>`Escena ${i+1}: ${h.n}\nElección del jugador: ${h.e||"(ninguna)"}`).join("\n")||"(aún no empieza)"}
+Escribe la escena ${n} de ${a.escenas}, en 3-5 oraciones, coherente con lo anterior y con la última elección. ${ult?`Esta es la ÚLTIMA escena: cierra la historia con UNO de los finales posibles, el que mejor corresponda a las decisiones del jugador. Devuelve "final" con su título EXACTO y un epílogo de 2-3 oraciones, y "opciones":[].`:`Da exactamente 3 opciones cortas y distintas que lleven la historia por caminos diferentes. "final":null. (Solo si la historia ya llegó a un final claro, puedes devolver "final" antes de tiempo.)`}
+Responde SOLO JSON: {"narracion":"","opciones":["","",""],"final":null}`);
+    const narr=String(r.narracion||"").trim(); if(!narr) throw {};
+    const ops=(r.opciones||[]).map(x=>String(x).trim()).filter(Boolean).slice(0,3);
+    const fin=r.final&&typeof r.final==="object"?r.final:null;
+    if(!ult&&!fin&&ops.length<2) throw {};
+    A.hist.push({n:narr,e:"",op:ops});
+    if(ult||fin){
+      const t=String((fin&&fin.titulo)||"").toLowerCase();
+      const m=a.finales.find(f=>f.titulo.toLowerCase()===t)||(fin&&fin.titulo?null:a.finales[0]);
+      A.fin={titulo:m?m.titulo:String(fin.titulo).slice(0,50),epilogo:String((fin&&fin.epilogo)||"Y así termina la historia.")};
+      if(!P.vistos.includes(A.fin.titulo)) P.vistos.push(A.fin.titulo); P.jugadas=(P.jugadas||0)+1;
+    }
+  }catch(e){ if(prev&&eleccion) prev.e=""; aiError(e); }
+  arcoBusy=false; save(); render(); window.scrollTo(0,document.body.scrollHeight);
+}
+function renderArcoPlay(){
+  const a=R.arcos.find(x=>x.id===arcoView.id); if(!a){arcoView=null;return render()}
+  const P=R.arcoProg[a.id]=R.arcoProg[a.id]||{vistos:[],jugadas:0,actual:null}, A=P.actual;
+  const head=`<div class="card"><div class="row"><button class="btn alt sm" id="abk">←</button><div style="min-width:0"><div class="name">${esc(a.emoji)} ${esc(a.titulo)}</div><div class="handle">${P.vistos.length}/${a.finales.length} finales descubiertos</div></div></div></div>`;
+  if(!A){
+    main.innerHTML=head+`<div class="card"><p class="body">${esc(a.premisa)}</p><label>¿Cómo te llamas en esta historia?</label><input id="anm" maxlength="30" value="${esc(R.nombre||"")}" placeholder="Tu nombre">
+    <div class="row" style="margin-top:12px"><button class="btn" id="ast">▶ Empezar (${a.escenas} escenas)</button></div></div>`;
+    $("abk").onclick=()=>{arcoView=null;render()};
+    $("ast").onclick=()=>{const nm=$("anm").value.trim();if(!nm)return toast("Pon tu nombre.");R.nombre=nm;P.actual={nombre:nm,hist:[],fin:null};arcoTurno(a,null)};
+    return;
+  }
+  const story=A.hist.map(h=>`<div class="card"><div class="body">${esc(h.n)}</div>${h.e?`<div class="muted" style="margin-top:6px">➡️ ${esc(h.e)}</div>`:""}</div>`).join("");
+  if(A.fin){
+    main.innerHTML=head+story+`<div class="card" style="border-color:var(--accent)"><div class="muted">🎬 Final</div><h2>${esc(A.fin.titulo)}</h2><p class="body">${esc(A.fin.epilogo)}</p>
+    <div class="muted">Finales descubiertos: ${P.vistos.map(esc).join(" · ")} (${P.vistos.length}/${a.finales.length})</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="aag">↺ Jugar de nuevo</button><button class="btn alt" id="aex">Salir</button></div></div>`;
+    $("abk").onclick=$("aex").onclick=()=>{arcoView=null;render()};
+    $("aag").onclick=()=>{P.actual=null;save();render();window.scrollTo(0,0)};
+    return;
+  }
+  const last=A.hist[A.hist.length-1];
+  main.innerHTML=head+story+(arcoBusy?`<div class="typing">La historia continúa…</div>`:`<div class="card"><div class="muted">Escena ${A.hist.length}/${a.escenas} · ¿Qué haces?</div>
+    ${(last&&last.op||[]).map((o,i)=>`<button class="btn alt" data-op="${i}" style="display:block;width:100%;text-align:left;white-space:normal;margin-top:8px">${esc(o)}</button>`).join("")}
+    <div class="row" style="margin-top:10px"><input id="aco" maxlength="150" placeholder="…o escribe qué haces"><button class="btn" id="aok">Enviar</button></div></div>`);
+  $("abk").onclick=()=>{if(!arcoBusy){arcoView=null;render()}};
+  main.querySelectorAll("[data-op]").forEach(b=>b.onclick=()=>arcoTurno(a,last.op[+b.dataset.op]));
+  if($("aok")){const go=()=>{const t=$("aco").value.trim();if(t)arcoTurno(a,t)};$("aok").onclick=go;$("aco").onkeydown=e=>{if(e.key==="Enter")go()}}
+}
+
 // ---------- plantillas de mundo ----------
 let plView=null;
 const FANDOMS_EJ=["Celebridades inventadas","Grupo de K-pop ficticio","Escuela de magia","Superhéroes originales","Instituto","Universidad","Carreras de autos","Anime original"];
-const pls=()=>S.plantillas||(S.plantillas=[]);
+const pls=()=>R.plantillas;
 function leerImagen(file,cb){const img=new Image(),url=URL.createObjectURL(file);
   img.onload=()=>{const sc=Math.min(1,480/img.width),cv=document.createElement("canvas");cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
     cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);cb(cv.toDataURL("image/jpeg",.7))};
@@ -570,16 +779,19 @@ function renderPlantillas(){
     <p class="muted">Una plantilla es un mundo listo: universo, meta y hasta 8 personajes. Al jugarla cambia tu escenario, pone la meta y suma sus personajes. Tu progreso se queda.</p>`+
     (pls().length?pls().map(t=>`<div class="card">${portadaHTML(t,120)}<div class="name" style="margin-top:8px">${esc(t.titulo)}</div><div class="handle">${esc(t.fandom||"Sin fandom")} · ${t.personajes.length} personajes</div>
       ${t.meta?`<div class="muted" style="margin-top:4px">🎯 ${esc(t.meta)}</div>`:""}
-      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" data-play="${t.id}">▶ Jugar este mundo</button><button class="btn alt sm" data-edit="${t.id}">✏️</button><button class="btn alt sm" data-del="${t.id}">🗑</button></div></div>`).join(""):`<div class="card"><p class="muted">Todavía no tienes plantillas. Toca ➕ Nueva para inventar tu primer mundo.</p></div>`);
+      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" data-play="${t.id}">${S?"▶ Aplicar a mi mundo":"▶ Jugar"}</button><button class="btn alt sm" data-edit="${t.id}">✏️</button><button class="btn alt sm" data-del="${t.id}">🗑</button></div></div>`).join(""):`<div class="card"><p class="muted">Todavía no tienes plantillas. Toca ➕ Nueva para inventar tu primer mundo.</p></div>`);
     $("pbk").onclick=()=>{plView=null;render()};
     $("pnew").onclick=()=>{if(pls().length>=12)return toast("Máximo 12 plantillas. Borra alguna.");plView={m:"edit",t:{id:null,titulo:"",fandom:"",descripcion:"",meta:"",portada:"",emoji:"🌎",color:COLORS[pls().length%COLORS.length],personajes:[]},nuevo:false};render()};
     main.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const t=pls().find(x=>x.id===b.dataset.edit);plView={m:"edit",t:JSON.parse(JSON.stringify(t)),nuevo:false};render()});
-    main.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return}S.plantillas=pls().filter(x=>x.id!==b.dataset.del);save();render()});
-    main.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Cambiar mi mundo? Toca otra vez";return}aplicarPlantilla(pls().find(x=>x.id===b.dataset.play))});
+    main.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return}R.plantillas=pls().filter(x=>x.id!==b.dataset.del);save();render()});
+    main.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const tt=pls().find(x=>x.id===b.dataset.play);
+      if(!S) return iniciarPlantilla(tt);
+      if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Cambiar mi mundo? Toca otra vez";return}aplicarPlantilla(tt)});
     return;
   }
   const t=v.t;
-  const disp=S.chars.filter(c=>!t.personajes.some(p=>p.nombre===c.nombre));
+  const base=[...(S?S.chars:[]),...R.lib].filter((c,i,a)=>a.findIndex(x=>x.nombre===c.nombre)===i);
+  const disp=base.filter(c=>!t.personajes.some(p=>p.nombre===c.nombre));
   main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="pbk">←</button><h2 style="margin:0">${t.id?"Editar plantilla":"Nueva plantilla"}</h2></div>
   <label>Imagen de portada (opcional)</label><div id="pimg" style="cursor:pointer">${portadaHTML(t,130)}</div><input id="pfile" type="file" accept="image/*" class="hidden">
   <div class="row" style="margin-top:6px"><input id="pem" maxlength="4" value="${esc(t.emoji)}" style="width:70px" aria-label="Emoji de portada"><div class="chips" id="pcol">${COLORS.map(c=>`<div class="chip" data-col="${c}" style="background:${c};border-color:${c===t.color?"#fff":c};width:28px;height:28px;padding:0"></div>`).join("")}</div>${t.portada?`<button class="btn alt sm" id="pnoimg">Quitar imagen</button>`:""}</div>
@@ -608,7 +820,7 @@ function renderPlantillas(){
   main.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{read();t.personajes.splice(+b.dataset.rm,1);render()});
   if($("pnp")) $("pnp").onclick=()=>{read();v.nuevo=true;v.mis=false;render()};
   if($("pmy")) $("pmy").onclick=()=>{read();v.mis=!v.mis;v.nuevo=false;render()};
-  main.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{read();const c=charById(b.dataset.add);if(c&&t.personajes.length<8)t.personajes.push({nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,fama:c.fama,relacion:c.relacion,emoji:c.emoji||"",color:c.color});render()});
+  main.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{read();const c=base.find(x=>x.id===b.dataset.add);if(c&&t.personajes.length<8)t.personajes.push({nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,fama:c.fama,relacion:c.relacion,emoji:c.emoji||"",color:c.color});render()});
   if($("qcn")) $("qcn").onclick=()=>{v.nuevo=false;again()};
   if($("qok")) $("qok").onclick=()=>{const n=$("qn").value.trim();if(!n)return toast("Ponle nombre al personaje.");read();
     t.personajes.push({nombre:n,usuario:n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9._]/g,"")||"user",bio:$("qb").value.trim(),personalidad:$("qp").value.trim()||"amigable y natural",fama:500,relacion:$("qr").value,emoji:$("qe").value.trim(),color:COLORS[t.personajes.length%COLORS.length]});
@@ -664,21 +876,20 @@ function renderProfile(){
   ${meter("😂 Humor",s.humor,"#ffb547")}${meter("✨ Aura",s.aura,"#7c5cff")}${meter("🌶️ Drama",s.drama,s.drama>70?"#ff4d4d":"#ff5c8a")}</div>
   <div class="card"><h3>Mundo</h3><label>Locura: <b id="lv">${LOCURA[S.yo.locura-1]}</b></label><input type="range" id="lo" min="1" max="5" value="${S.yo.locura}"></div>
   <div class="card"><h3>🏆 Logros (${S.logros.length}/${LOGROS.length})</h3>${LOGROS.map(l=>`<div class="logro${S.logros.includes(l[0])?"":" off"}"><span style="font-size:22px">${l[1]}</span><div><div class="name">${l[2]}</div><div class="muted">${l[3]}</div></div></div>`).join("")}</div>
-  <div class="card"><button class="btn alt" id="rs">Empezar de nuevo</button><div id="cf" class="hidden" style="margin-top:10px"><p class="muted">Se borrará tu perfil, posts, personajes y logros.</p><button class="btn" id="rsy">Sí, borrar todo</button></div></div>
+  <div class="card"><button class="btn alt" id="rs">🗑 Borrar este mundo</button><div id="cf" class="hidden" style="margin-top:10px"><p class="muted">Se borrará este mundo con su perfil, posts, personajes y logros. Tus plantillas, arcos y biblioteca se quedan.</p><button class="btn" id="rsy">Sí, borrar este mundo</button></div></div>
   <p class="muted" style="text-align:center">fama es 100% gratis: sin energía, sin gemas, sin anuncios, sin suscripción.</p>`;
   $("lo").oninput=e=>{S.yo.locura=+e.target.value;$("lv").textContent=LOCURA[S.yo.locura-1];save()};
   $("pls").onclick=()=>{plView={m:"list"};render()};
   $("edy").onclick=()=>{editYo={name:S.yo.name,emoji:S.yo.emoji||"",bio:S.yo.bio,fandoms:S.yo.fandoms.join(", "),escenario:S.yo.escenario};render()};
   $("rs").onclick=()=>$("cf").classList.remove("hidden");
-  $("rsy").onclick=async()=>{S=null;setup=null;try{localStorage.removeItem("estado_juego_v2");localStorage.removeItem("estado_juego")}catch(e){}
-    if(db&&userId){try{await db.collection("data/users/"+userId).doc("juego").delete()}catch(e){}} view="feed";render()};
+  $("rsy").onclick=()=>{delete R.worlds[R.actual];R.actual=null;S=null;setup=null;view="feed";save();render();toast("Mundo borrado")};
 }
 
 nav.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(busy)return;view=b.dataset.v;charForm=null;editYo=null;plView=null;if(view!=="mensajes")openChat=null;render();window.scrollTo(0,0)});
 
 (async()=>{
   if(typeof claude!=="undefined") claude.use("sample").then(s=>{sample=s;if(!S)render()}).catch(()=>{});
-  S=await load(); render();
+  R=await load(); S=null; render();
 })();
 })();
 </script>
