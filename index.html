@@ -130,7 +130,11 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const fmt=n=>{n=Math.round(n||0);return n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":String(n)};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const num=(v,d=0)=>Number.isFinite(+v)?+v:d;
-const av=(n,c,s,e)=>`<div class="av${s?" s":""}" style="background:${c}">${e?esc(e):esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
+const av=(n,c,s,e)=>e&&String(e).startsWith("data:image")?`<div class="av${s?" s":""}" style="background:${c} url(${e}) center/cover no-repeat"></div>`:`<div class="av${s?" s":""}" style="background:${c}">${e?esc(e):esc((n||"?").trim()[0]?.toUpperCase()||"?")}</div>`;
+const CAMPOS=["nombre","usuario","bio","personalidad","relacion","emoji","color","fama","genero","foto","extra"];
+const copiaChar=c=>{const o={};CAMPOS.forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});return o};
+const formVacio=i=>({nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[i%COLORS.length],fama:5000,genero:"",foto:"",extra:""});
+const GENEROS=["Masculino","Femenino","No binario"], FAMAS=[[1e3,"1K+"],[5e3,"5K+"],[1e4,"10K+"],[2e4,"20K+"],[5e4,"50K+"],[1e5,"100K+"]];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let toastQ=[],toastOn=false;
 function toast(t){toastQ.push(t);if(!toastOn)nextToast()}
@@ -248,7 +252,7 @@ function mundo(){
 Jugador: ${y.name} (@${y.handle}). Bio: "${y.bio}". Escenario: ${y.escenario}. Fandoms: ${y.fandoms.join(", ")}. Nivel de locura del mundo: ${LOCURA[y.locura-1]} (${y.locura}/5).
 Stats: ${fmt(S.stats.seguidores)} seguidores, nivel ${nivel()}, humor ${S.stats.humor}/100, aura ${S.stats.aura}/100, drama ${S.stats.drama}/100${S.cancelado?". ¡ESTÁ CANCELADO! La gente está molesta con él/ella.":""}.${S.meta&&!S.meta.cumplida?`\nMETA del jugador en este mundo: "${S.meta.texto}" (progreso ${S.meta.progreso}/100). Si sus acciones la acercan o alejan, refléjalo en "progresoMeta" (entero de -10 a 25; 0 si no tiene relación).`:""}`;
 }
-function charLine(c){return `- id:${c.id} | ${c.nombre} (@${c.usuario}) | ${c.personalidad} | relación: ${c.relacion} | afinidad ${c.afinidad}/100${c.memoria?.length?` | recuerda: ${c.memoria.slice(-4).join("; ")}`:""}`}
+function charLine(c){return `- id:${c.id} | ${c.nombre} (@${c.usuario}) | ${c.personalidad} | relación: ${c.relacion}${c.genero?` | género: ${c.genero}`:""}${c.extra?` | detalles: ${c.extra}`:""} | afinidad ${c.afinidad}/100${c.memoria?.length?` | recuerda: ${c.memoria.slice(-4).join("; ")}`:""}`}
 function addMemoria(id,txt){const c=charById(id);if(c&&txt){c.memoria=c.memoria||[];c.memoria.push(String(txt).slice(0,140))}}
 function addNPCPosts(list){
   (list||[]).slice(0,3).forEach(n=>{if(!n||!n.texto)return;
@@ -256,7 +260,7 @@ function addNPCPosts(list){
     if(n.esNoticia) S.stats.noticias=(S.stats.noticias||0)+1;
   });
 }
-function newChar(n,i,af=50){return {emoji:n.emoji||"",id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:n.color||COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
+function newChar(n,i,af=50){return {emoji:n.emoji||"",genero:n.genero||"",foto:n.foto||"",extra:n.extra||"",id:"c"+uid(),nombre:n.nombre||"Alguien",usuario:(n.usuario||"user"+i).replace(/^@/,"").replace(/\s/g,""),bio:n.bio||"",personalidad:n.personalidad||"",fama:num(n.fama,500),color:n.color||COLORS[i%COLORS.length],afinidad:af,relacion:n.relacion||"amigos",memoria:[]}}
 function checkLogros(){
   const s=S.stats,has=k=>S.logros.includes(k),add=k=>{if(!has(k)){S.logros.push(k);const l=LOGROS.find(x=>x[0]===k);toast(`🏆 Logro: ${l[2]}`)}};
   if(S.feed.some(p=>p.tipo==="mio"&&!p.auto))add("primer");
@@ -358,7 +362,7 @@ Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea",
   }
   // paso 3: elegir primer seguidor
   main.innerHTML=`<div class="card"><h2>¿Quién es tu primer seguidor?</h2><p class="muted">Será tu persona más cercana al empezar. Los demás también te seguirán.</p>
-  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${uh(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
+  ${setup.cands.map(c=>`<div class="pick${setup.primero===c.id?" on":""}" data-id="${c.id}"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div><div class="name">${esc(c.nombre)} <span class="handle">@${uh(c.usuario)}</span></div><div class="muted">${esc(c.bio)}</div><div class="muted">${fmt(c.fama)} seguidores · ${esc(c.relacion)}</div></div></div></div>`).join("")}
   <div class="row" style="margin-top:12px"><button class="btn alt" id="bk">Atrás</button><button class="btn" id="go">Entrar a fama</button></div>
   <div class="typing hidden" id="wait">Preparando tu primer post…</div></div>`;
   main.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{setup.primero=p.dataset.id;main.querySelectorAll(".pick").forEach(x=>x.classList.toggle("on",x===p))});
@@ -393,10 +397,10 @@ function postHTML(p){
   if(p.tipo==="npc"){const a=p.autor;
     return `<div class="card post"><div class="row">${av(a.nombre,a.news?"#118ab2":"#555")}<div><div class="name">${esc(a.nombre)}${a.news?'<span class="badge news">📰 noticias</span>':""}</div><div class="handle">@${uh(a.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   if(p.tipo==="char"){const c=charById(p.cid)||{nombre:"?",usuario:"?",color:"#555"};
-    return `<div class="card post"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${uh(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
+    return `<div class="card post"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div><div class="name">${esc(c.nombre)}<span class="badge with">📅 plan contigo</span></div><div class="handle">@${uh(c.usuario)}</div></div></div><div class="body">${esc(p.texto)}</div><div class="meta"><span>❤️ ${fmt(p.likes)}</span></div></div>`}
   const con=p.con&&charById(p.con);
   const reps=(p.replies||[]).map(r=>{const c=charById(r.cid)||{nombre:r.nombre||"Alguien",usuario:r.usuario||"anon",color:"#555"};
-    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1,c.emoji)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${uh(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
+    return `<div class="reply"><div class="row">${av(c.nombre,c.color,1,c.foto||c.emoji)}<div><span class="name">${esc(c.nombre)}</span> <span class="handle">@${uh(c.usuario)}</span></div></div><div class="body">${esc(r.texto)}</div></div>`}).join("");
   const ds=p.delta?[p.delta.humor?`😂 ${p.delta.humor>0?"+":""}${p.delta.humor}`:"",p.delta.aura?`✨ ${p.delta.aura>0?"+":""}${p.delta.aura}`:"",p.delta.drama?`🌶️ ${p.delta.drama>0?"+":""}${p.delta.drama}`:""].filter(Boolean).join(" · "):"";
   return `<div class="card post"><div class="row">${av(S.yo.name,"#ff5c8a",0,S.yo.emoji)}<div><div class="name">${esc(S.yo.name)}${p.viral?'<span class="badge viral">🔥 viral</span>':""}${con?`<span class="badge with">con ${esc(con.nombre)}</span>`:""}</div><div class="handle">@${esc(S.yo.handle)}</div></div></div>
   <div class="body">${esc(p.texto)}</div>
@@ -467,20 +471,30 @@ function renderCharForm(){
   const f=charForm;
   main.innerHTML=`<div class="card"><h2>${f.id?"Editar personaje":"Crear personaje"}${f.lib?" (biblioteca)":""}</h2>
   <p class="muted">Inventa a tu propia gente. Deben ser personajes originales: nada de personas reales ni personajes con derechos de autor.</p>
+  <div style="text-align:center;margin:12px 0"><div id="cph" style="cursor:pointer;display:inline-block">${f.foto?`<div style="width:84px;height:84px;border-radius:50%;background:url(${f.foto}) center/cover"></div>`:`<div class="av" style="width:84px;height:84px;font-size:36px;background:${f.color}">${esc(f.emoji||(f.nombre.trim()[0]||"＋").toUpperCase())}</div>`}</div>
+    <div class="muted">${f.foto?"Toca para cambiar la foto":"Añadir una foto (opcional)"}</div><input id="cfile" type="file" accept="image/*" class="hidden">${f.foto?`<button class="btn alt sm" id="cnof" style="margin-top:6px">Quitar foto</button>`:""}</div>
   <label>Nombre</label><input id="cn" maxlength="40" value="${esc(f.nombre)}" placeholder="Ej. Kiara la influencer">
   <label>Usuario (sin @)</label><input id="cu" maxlength="30" value="${esc(f.usuario)}" placeholder="kiara.vibes">
+  <label>Género</label><div class="chips" id="cgn">${GENEROS.map(g=>`<div class="chip${f.genero===g?" on":""}" data-gn="${g}">${g}</div>`).join("")}</div>
   <label>Bio (una línea)</label><input id="cb" maxlength="120" value="${esc(f.bio)}" placeholder="Reina del chisme del barrio">
   <label>Personalidad y cómo habla</label><textarea id="cp" maxlength="300" placeholder="Ej. Dramática, usa mucho 'nena' y emojis, siempre exagera">${esc(f.personalidad)}</textarea>
+  <label>Descripciones adicionales (opcional)</label><textarea id="cx" maxlength="400" style="min-height:50px" placeholder="Rasgos, historias, manías… influyen en cómo actúa el personaje">${esc(f.extra)}</textarea>
   <div class="row" style="margin-top:8px"><button class="btn alt sm" id="cai">✨ Completar con IA</button><span class="muted">Llena los campos vacíos usando lo que ya escribiste.</span></div>
   <label>Relación contigo</label><select id="cr">${RELACIONES.map(x=>`<option${x===f.relacion?" selected":""}>${x}</option>`).join("")}</select>
   <label>Emoji de avatar (opcional)</label><input id="ce" maxlength="4" value="${esc(f.emoji)}" placeholder="😎">
   <label>Color</label><div class="chips" id="cc">${COLORS.map(c=>`<div class="chip${c===f.color?" on":""}" data-col="${c}" style="background:${c};border-color:${c===f.color?"#fff":c};width:34px;height:34px;padding:0"></div>`).join("")}</div>
-  <label>Seguidores que tiene (fama)</label><input id="cf" type="number" min="0" max="50000000" value="${f.fama}">
+  <label>Cantidad de seguidores</label><div class="chips">${FAMAS.map(([n,l])=>`<div class="chip${f.fama===n?" on":""}" data-fm="${n}">${l}</div>`).join("")}</div>
+  <input id="cf" type="number" min="0" max="50000000" value="${f.fama}" style="margin-top:8px" aria-label="Seguidores personalizados">
   <div class="row" style="margin-top:14px"><button class="btn alt" id="ccn">Cancelar</button><button class="btn" id="csv">${f.id?"Guardar":"Crear"}</button>${f.id?`<button class="btn alt" id="cdl" style="margin-left:auto">🗑 Borrar</button>`:""}</div>
   <div class="typing hidden" id="ctp">Pensando…</div></div>`;
-  const read=()=>{f.nombre=$("cn").value.trim();f.usuario=$("cu").value.trim().replace(/^@+/,"").replace(/\s/g,"");f.bio=$("cb").value.trim();f.personalidad=$("cp").value.trim();f.relacion=$("cr").value;f.emoji=$("ce").value.trim();f.fama=clamp(num($("cf").value,500),0,5e7)};
+  const read=()=>{f.nombre=$("cn").value.trim();f.usuario=$("cu").value.trim().replace(/^@+/,"").replace(/\s/g,"");f.bio=$("cb").value.trim();f.personalidad=$("cp").value.trim();f.relacion=$("cr").value;f.emoji=$("ce").value.trim();f.fama=clamp(num($("cf").value,500),0,5e7);f.extra=$("cx").value.trim()};
   main.querySelectorAll("[data-col]").forEach(c=>c.onclick=()=>{read();f.color=c.dataset.col;renderCharForm()});
   $("ccn").onclick=()=>{charForm=null;render()};
+  $("cph").onclick=()=>$("cfile").click();
+  $("cfile").onchange=e=>{const fl=e.target.files[0];if(fl){read();leerAvatar(fl,d=>{f.foto=d;renderCharForm()})}};
+  if($("cnof")) $("cnof").onclick=()=>{read();f.foto="";renderCharForm()};
+  main.querySelectorAll("[data-gn]").forEach(c=>c.onclick=()=>{read();f.genero=f.genero===c.dataset.gn?"":c.dataset.gn;renderCharForm()});
+  main.querySelectorAll("[data-fm]").forEach(c=>c.onclick=()=>{read();f.fama=+c.dataset.fm;renderCharForm()});
   if($("cdl")) $("cdl").onclick=()=>{ if(!f.confirmDel){f.confirmDel=true;$("cdl").textContent="¿Seguro? Toca otra vez";return}
     if(f.lib){R.lib=R.lib.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render();return}
     S.feed=S.feed.filter(p=>p.cid!==f.id);delete S.chats[f.id];delete S.unread[f.id];S.planes=S.planes.filter(p=>p.cid!==f.id);
@@ -488,7 +502,7 @@ function renderCharForm(){
   $("cai").onclick=async()=>{read(); if(!f.nombre&&!f.bio&&!f.personalidad) return toast("Escribe al menos un nombre o una idea.");
     $("cai").disabled=true;$("ctp").classList.remove("hidden");
     try{const x=await ai(`${S?mundo():MUNDO0}
-El jugador está creando un personaje original (ficticio, apto 13+). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}". Completa lo que falte y no cambies lo que ya está escrito.
+El jugador está creando un personaje original (ficticio, apto 13+). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}", género="${f.genero}", descripciones adicionales="${f.extra}". Completa lo que falte y no cambies lo que ya está escrito.
 Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea","personalidad":"rasgos y forma de hablar"}`);
       if(!f.nombre&&x.nombre)f.nombre=String(x.nombre).slice(0,40); if(!f.usuario&&x.usuario)f.usuario=String(x.usuario).replace(/^@+/,"").replace(/\s/g,"").slice(0,30);
       if(!f.bio&&x.bio)f.bio=String(x.bio).slice(0,120); if(!f.personalidad&&x.personalidad)f.personalidad=String(x.personalidad).slice(0,300);
@@ -496,11 +510,11 @@ Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea
     }catch(e){aiError(e);$("cai").disabled=false;$("ctp").classList.add("hidden")}};
   $("csv").onclick=()=>{read(); if(!f.nombre) return toast("Ponle un nombre al personaje.");
     if(!f.usuario) f.usuario=f.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9._]/g,"")||"user";
-    if(f.lib){const dat={nombre:f.nombre,usuario:f.usuario,bio:f.bio,personalidad:f.personalidad||"amigable y natural",relacion:f.relacion,emoji:f.emoji,color:f.color,fama:f.fama};
+    if(f.lib){const dat={...copiaChar(f),personalidad:f.personalidad||"amigable y natural"};
       if(f.id){Object.assign(R.lib.find(c=>c.id===f.id),dat);toast("Personaje actualizado")}
       else{if(R.lib.length>=60)return toast("Tu biblioteca está llena (60).");R.lib.push({id:"l"+uid(),...dat});toast("📚 Guardado en tu biblioteca")}
       charForm=null;save();render();return}
-    if(f.id){const c=charById(f.id);Object.assign(c,{nombre:f.nombre,usuario:f.usuario,bio:f.bio,personalidad:f.personalidad||c.personalidad,relacion:f.relacion,emoji:f.emoji,color:f.color,fama:f.fama});toast("Personaje actualizado")}
+    if(f.id){const c=charById(f.id);Object.assign(c,{...copiaChar(f),personalidad:f.personalidad||c.personalidad});toast("Personaje actualizado")}
     else{ if(S.chars.length>=30) return toast("Ya tienes 30 personajes. Borra alguno primero.");
       const n=newChar({...f,personalidad:f.personalidad||"amigable y natural"},S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te creó como personaje`);toast(`✨ ${n.nombre} ya está en tu mundo`)}
     charForm=null;save();render()};
@@ -509,17 +523,17 @@ function renderFollowers(){
   if(charForm) return renderCharForm();
   const sorted=[...S.chars].sort((a,b)=>b.afinidad-a.afinidad);
   main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Tus personajes</h2><span class="row"><button class="btn alt sm" id="libb">📥</button><button class="btn sm" id="newc">➕ Crear</button></span></div><p class="muted">La afinidad cambia según lo que publicas, cómo les hablas y los planes que hacen juntos. Puedes cambiar la relación (química) gratis.</p>${libPick&&R.lib.length?`<div class="card"><div class="muted">Toca para traer a tu mundo:</div><div class="chips" style="margin-top:6px">${R.lib.filter(l=>!S.chars.some(c=>c.nombre===l.nombre)).map(l=>`<div class="chip" data-li="${l.id}">${esc(l.emoji||"")} ${esc(l.nombre)}</div>`).join("")||'<span class="muted">Ya están todos en tu mundo.</span>'}</div></div>`:libPick?'<div class="card muted">Tu biblioteca está vacía. Crea personajes en 🏠 Inicio → Personajes, o guarda uno con 📚.</div>':""}`+
-  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca">📚</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
+  sorted.map(c=>`<div class="card"><div class="row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${fmt(c.fama)} seguidores</div></div><button class="btn alt sm" data-edc="${c.id}">✏️</button><button class="btn alt sm" data-sv="${c.id}" title="Guardar en mi biblioteca">📚</button><button class="btn alt sm" data-dm="${c.id}">💬</button><button class="btn alt sm" data-pl="${c.id}">📅</button></div>
   <div class="body" style="margin-top:8px">${esc(c.bio)}</div>
   <div class="muted">💗 Afinidad ${c.afinidad}/100 ${relTxt(c.afinidad)}</div><div class="bar"><i style="width:${c.afinidad}%;background:${c.color}"></i></div>
   <div class="row"><span class="muted" style="flex:none">Relación:</span><select data-rel="${c.id}">${RELACIONES.map(r=>`<option${r===c.relacion?" selected":""}>${r}</option>`).join("")}</select></div>
   ${c.memoria?.length?`<div class="muted" style="margin-top:8px">🧠 Recuerda: ${esc(c.memoria.slice(-3).join(" · "))}</div>`:""}</div>`).join("");
-  $("newc").onclick=()=>{charForm={id:null,nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[S.chars.length%COLORS.length],fama:500};render()};
+  $("newc").onclick=()=>{charForm={id:null,...formVacio(S.chars.length)};render()};
   $("libb").onclick=()=>{libPick=!libPick;render()};
   main.querySelectorAll("[data-li]").forEach(b=>b.onclick=()=>{const l=R.lib.find(x=>x.id===b.dataset.li);if(!l||S.chars.length>=30)return;const n=newChar(l,S.chars.length,50);S.chars.push(n);addMemoria(n.id,`${S.yo.name} te trajo a este mundo`);save();toast(`✨ ${n.nombre} llegó a tu mundo`);render()});
   main.querySelectorAll("[data-sv]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.sv);if(R.lib.some(l=>l.nombre===c.nombre))return toast("Ya está en tu biblioteca");if(R.lib.length>=60)return toast("Tu biblioteca está llena (60).");
-    R.lib.push({id:"l"+uid(),nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama});save();toast("📚 Guardado en tu biblioteca")});
-  main.querySelectorAll("[data-edc]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.edc);charForm={id:c.id,nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama};render()});
+    R.lib.push({id:"l"+uid(),...copiaChar(c)});save();toast("📚 Guardado en tu biblioteca")});
+  main.querySelectorAll("[data-edc]").forEach(b=>b.onclick=()=>{const c=charById(b.dataset.edc);charForm={...formVacio(0),...copiaChar(c),id:c.id};render()});
   main.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{openChat=b.dataset.dm;view="mensajes";render()});
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{view="planes";render();$("pc").value=b.dataset.pl});
   main.querySelectorAll("[data-rel]").forEach(s=>s.onchange=()=>{const c=charById(s.dataset.rel);c.relacion=s.value;addMemoria(c.id,`${S.yo.name} ahora nos considera ${s.value}`);save();toast(`Ahora tú y ${c.nombre} son ${s.value}`)});
@@ -532,14 +546,14 @@ function renderMessages(){
     main.innerHTML=`<div class="row" style="justify-content:space-between"><h2>Mensajes</h2><button class="btn alt sm" id="pk">🔔 ¿Alguien me escribió?</button></div>
     <div class="typing hidden" id="tp">Revisando…</div>`+
     (withChats.length?withChats.map(c=>{const last=S.chats[c.id].slice(-1)[0],u=S.unread[c.id]||0;
-      return `<div class="card row" data-c="${c.id}" style="cursor:pointer">${av(c.nombre,c.color,0,c.emoji)}<div style="min-width:0;flex:1"><div class="name">${esc(c.nombre)}${u?`<span class="badge viral">${u} nuevo${u>1?"s":""}</span>`:""}</div><div class="handle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.yo?"Tú: ":""}${esc(last.texto)}</div></div></div>`}).join(""):'<div class="card muted">Sin conversaciones todavía.</div>')+
+      return `<div class="card row" data-c="${c.id}" style="cursor:pointer">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="min-width:0;flex:1"><div class="name">${esc(c.nombre)}${u?`<span class="badge viral">${u} nuevo${u>1?"s":""}</span>`:""}</div><div class="handle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.yo?"Tú: ":""}${esc(last.texto)}</div></div></div>`}).join(""):'<div class="card muted">Sin conversaciones todavía.</div>')+
     `<p class="muted">Escríbele a cualquiera:</p><div class="chips">${S.chars.map(c=>`<div class="chip" data-c="${c.id}">${esc(c.nombre)}</div>`).join("")}</div>`;
     main.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{openChat=b.dataset.c;render()});
     $("pk").onclick=pokeDM;
     return;
   }
   const c=charById(openChat); const msgs=S.chats[c.id]||[]; S.unread[c.id]=0; header(); save();
-  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color,0,c.emoji)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
+  main.innerHTML=`<div class="card"><div class="row"><button class="btn alt sm" id="bk">←</button>${av(c.nombre,c.color,0,c.foto||c.emoji)}<div><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)} · ${esc(c.relacion)} ${relTxt(c.afinidad)}</div></div></div></div>
   <div class="card"><div class="dm" id="dm">${msgs.map(m=>`<div class="msg ${m.yo?"me":"them"}">${esc(m.texto)}</div>`).join("")||`<p class="muted">Empieza la conversación con ${esc(c.nombre)}.</p>`}<div class="typing hidden" id="tp">${esc(c.nombre)} está escribiendo…</div></div>
   <div class="row" style="margin-top:10px"><input id="mi" maxlength="300" placeholder="Escribe un mensaje…"><button class="btn" id="snd">Enviar</button></div></div>`;
   const dm=$("dm"); dm.scrollTop=dm.scrollHeight;
@@ -551,7 +565,7 @@ async function pokeDM(){
   if(busy)return; busy=true; $("pk").disabled=true; $("tp").classList.remove("hidden");
   const c=[...S.chars].sort(()=>Math.random()-.5).sort((a,b)=>b.afinidad-a.afinidad+(Math.random()*40-20))[0];
   try{
-    const r=await ai(`${mundo()}\nEres ${c.nombre} (@${c.usuario}). ${c.bio}. Personalidad: ${c.personalidad}. Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}. Último post de ${S.yo.name}: "${S.feed.find(p=>p.tipo==="mio")?.texto||"nada"}".
+    const r=await ai(`${mundo()}\nEres ${c.nombre} (@${c.usuario}). ${c.bio}. Personalidad: ${c.personalidad}.${c.extra?" Detalles: "+c.extra+".":""}${c.genero?" Género: "+c.genero+".":""} Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}. Último post de ${S.yo.name}: "${S.feed.find(p=>p.tipo==="mio")?.texto||"nada"}".
 Escríbele TÚ PRIMERO un mensaje directo por tu cuenta (chisme, una pregunta, un plan, una queja, un meme…), corto y con tu voz, apto 13+. Responde SOLO JSON: {"texto":""}`);
     (S.chats[c.id]=S.chats[c.id]||[]).push({yo:false,texto:r.texto||"👀"}); S.unread[c.id]=(S.unread[c.id]||0)+1; save(); toast(`💬 ${c.nombre} te escribió`);
   }catch(e){aiError(e)}
@@ -564,7 +578,7 @@ async function sendDM(c,texto){
   const hist=S.chats[c.id].slice(-14).map(m=>(m.yo?S.yo.name:c.nombre)+": "+m.texto).join("\n");
   try{
     const r=await ai(`${mundo()}
-Eres ${c.nombre} (@${c.usuario}). Bio: ${c.bio}. Personalidad y forma de hablar: ${c.personalidad}. Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Lo que recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}.
+Eres ${c.nombre} (@${c.usuario}). Bio: ${c.bio}. Personalidad y forma de hablar: ${c.personalidad}.${c.extra?" Detalles: "+c.extra+".":""}${c.genero?" Género: "+c.genero+".":""} Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Lo que recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}.
 Mensajes directos (tono de chat, corto, emojis ok, apto 13+, nunca romántico ni sexual):
 ${hist}
 Responde como ${c.nombre}. Si aprendes algo importante del jugador, ponlo en "recuerdo". Responde SOLO JSON: {"respuesta":"","delta":0,"recuerdo":""}`);
@@ -587,7 +601,7 @@ function renderPlanes(){
   <div class="row" style="margin-top:10px"><button class="btn alt" id="ag">📅 Agendar</button><button class="btn" id="ya">Hacerlo ahora</button></div>
   <div class="typing hidden" id="tp">Viviendo el plan…</div></div>
   ${pend.length?`<h3>Pendientes</h3>`+pend.map(p=>{const c=charById(p.cid);return c?`<div class="card row"><div style="flex:1">${esc(p.actividad)} <span class="muted">con ${esc(c.nombre)}</span></div><button class="btn sm" data-go="${p.id}">Hacerlo</button><button class="btn alt sm" data-x="${p.id}">✕</button></div>`:""}).join(""):""}
-  ${hechos.length?`<h3>Recuerdos</h3>`+hechos.map(p=>{const c=charById(p.cid)||{nombre:"?",color:"#555"};return `<div class="card"><div class="row">${av(c.nombre,c.color,1,c.emoji)}<b>${esc(p.actividad)}</b></div><div class="story">${esc(p.resultado)}</div></div>`}).join(""):'<p class="muted">Todavía no has hecho planes. Los planes suben la afinidad y generan posts.</p>'}`;
+  ${hechos.length?`<h3>Recuerdos</h3>`+hechos.map(p=>{const c=charById(p.cid)||{nombre:"?",color:"#555"};return `<div class="card"><div class="row">${av(c.nombre,c.color,1,c.foto||c.emoji)}<b>${esc(p.actividad)}</b></div><div class="story">${esc(p.resultado)}</div></div>`}).join(""):'<p class="muted">Todavía no has hecho planes. Los planes suben la afinidad y generan posts.</p>'}`;
   main.querySelectorAll("[data-a]").forEach(ch=>ch.onclick=()=>$("pa").value=ch.dataset.a);
   $("ag").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");S.planes.push({id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"});save();toast("📅 Plan agendado");render()};
   $("ya").onclick=()=>{const a=$("pa").value.trim();if(!a)return toast("Escribe o escoge una actividad.");const p={id:uid(),cid:$("pc").value,actividad:a,estado:"pendiente"};S.planes.push(p);doPlan(p)};
@@ -638,7 +652,7 @@ function renderHome(){
   } else {
     h+=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Mis personajes</h2><button class="btn sm" id="lnew">➕ Crear</button></div>
     <p class="muted">Tu biblioteca. Puedes traerlos a cualquier mundo (pestaña Seguidores → 📥) o a una plantilla. Solo personajes originales.</p>`+
-    (R.lib.length?R.lib.map(c=>`<div class="card row">${av(c.nombre,c.color,0,c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)}</div><div class="muted">${esc(c.bio)}</div></div><button class="btn alt sm" data-ledit="${c.id}">✏️</button></div>`).join(""):`<div class="card"><p class="muted">Tu biblioteca está vacía. Crea un personaje con ➕, o guarda uno de tus mundos con 📚.</p></div>`);
+    (R.lib.length?R.lib.map(c=>`<div class="card row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)}</div><div class="muted">${esc(c.bio)}</div></div><button class="btn alt sm" data-ledit="${c.id}">✏️</button></div>`).join(""):`<div class="card"><p class="muted">Tu biblioteca está vacía. Crea un personaje con ➕, o guarda uno de tus mundos con 📚.</p></div>`);
   }
   main.innerHTML=h;
   main.querySelectorAll("[data-tab]").forEach(c=>c.onclick=()=>{homeTab=c.dataset.tab;render()});
@@ -649,8 +663,8 @@ function renderHome(){
   if($("anew")) $("anew").onclick=()=>{arcoView={m:"edit",a:{id:null,titulo:"",emoji:"📖",color:COLORS[R.arcos.length%COLORS.length],premisa:"",personajes:"",escenas:5,finales:[{titulo:"",cond:""},{titulo:"",cond:""}]}};render()};
   main.querySelectorAll("[data-aedit]").forEach(b=>b.onclick=()=>{arcoView={m:"edit",a:JSON.parse(JSON.stringify(R.arcos.find(x=>x.id===b.dataset.aedit)))};render()});
   main.querySelectorAll("[data-aplay]").forEach(b=>b.onclick=()=>{arcoView={m:"play",id:b.dataset.aplay};render();window.scrollTo(0,0)});
-  if($("lnew")) $("lnew").onclick=()=>{charForm={lib:true,id:null,nombre:"",usuario:"",bio:"",personalidad:"",relacion:"amigos",emoji:"",color:COLORS[R.lib.length%COLORS.length],fama:500};render()};
-  main.querySelectorAll("[data-ledit]").forEach(b=>b.onclick=()=>{const c=R.lib.find(x=>x.id===b.dataset.ledit);charForm={lib:true,id:c.id,nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,relacion:c.relacion,emoji:c.emoji||"",color:c.color,fama:c.fama};render()});
+  if($("lnew")) $("lnew").onclick=()=>{charForm={lib:true,id:null,...formVacio(R.lib.length)};render()};
+  main.querySelectorAll("[data-ledit]").forEach(b=>b.onclick=()=>{const c=R.lib.find(x=>x.id===b.dataset.ledit);charForm={lib:true,...formVacio(0),...copiaChar(c),id:c.id};render()});
 }
 
 // ---------- arcos ----------
@@ -756,6 +770,10 @@ function renderArcoPlay(){
 let plView=null;
 const FANDOMS_EJ=["Celebridades inventadas","Grupo de K-pop ficticio","Escuela de magia","Superhéroes originales","Instituto","Universidad","Carreras de autos","Anime original"];
 const pls=()=>R.plantillas;
+function leerAvatar(file,cb){const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{const L=160,cv=document.createElement("canvas");cv.width=cv.height=L;const m=Math.min(img.width,img.height);
+    cv.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,L,L);URL.revokeObjectURL(url);cb(cv.toDataURL("image/jpeg",.75))};
+  img.onerror=()=>toast("No se pudo leer esa imagen");img.src=url}
 function leerImagen(file,cb){const img=new Image(),url=URL.createObjectURL(file);
   img.onload=()=>{const sc=Math.min(1,480/img.width),cv=document.createElement("canvas");cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
     cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);cb(cv.toDataURL("image/jpeg",.7))};
@@ -804,7 +822,7 @@ function renderPlantillas(){
   <div class="typing hidden" id="ptp">Inventando el mundo…</div>
   <h3 style="margin-top:16px">Personajes (${t.personajes.length}/8)</h3>
   <p class="muted">Solo personajes originales e inventados: nada de personas reales ni personajes con derechos de autor.</p>
-  ${t.personajes.map((p,i)=>`<div class="card row">${av(p.nombre,p.color,0,p.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(p.nombre)}</div><div class="muted">${esc(p.bio)}</div></div><button class="btn alt sm" data-rm="${i}">✕</button></div>`).join("")}
+  ${t.personajes.map((p,i)=>`<div class="card row">${av(p.nombre,p.color,0,p.foto||p.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(p.nombre)}</div><div class="muted">${esc(p.bio)}</div></div><button class="btn alt sm" data-rm="${i}">✕</button></div>`).join("")}
   ${t.personajes.length<8?`<div class="row" style="flex-wrap:wrap"><button class="btn alt sm" id="pnp">➕ Nuevo personaje</button>${disp.length?`<button class="btn alt sm" id="pmy">📥 De mis personajes</button>`:""}</div>`:""}
   ${v.nuevo?`<div class="card" style="margin-top:8px"><h3>Nuevo personaje</h3><label>Nombre</label><input id="qn" maxlength="40"><label>Bio</label><input id="qb" maxlength="120"><label>Personalidad y cómo habla</label><textarea id="qp" maxlength="300" style="min-height:50px"></textarea><label>Relación contigo</label><select id="qr">${RELACIONES.map(x=>`<option>${x}</option>`).join("")}</select><label>Emoji (opcional)</label><input id="qe" maxlength="4"><div class="row" style="margin-top:10px"><button class="btn alt sm" id="qcn">Cancelar</button><button class="btn sm" id="qok">Añadir</button></div></div>`:""}
   ${v.mis?`<div class="chips" style="margin-top:8px">${disp.map(c=>`<div class="chip" data-add="${c.id}">${esc(c.emoji||"")} ${esc(c.nombre)}</div>`).join("")}</div>`:""}
@@ -820,7 +838,7 @@ function renderPlantillas(){
   main.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{read();t.personajes.splice(+b.dataset.rm,1);render()});
   if($("pnp")) $("pnp").onclick=()=>{read();v.nuevo=true;v.mis=false;render()};
   if($("pmy")) $("pmy").onclick=()=>{read();v.mis=!v.mis;v.nuevo=false;render()};
-  main.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{read();const c=base.find(x=>x.id===b.dataset.add);if(c&&t.personajes.length<8)t.personajes.push({nombre:c.nombre,usuario:c.usuario,bio:c.bio,personalidad:c.personalidad,fama:c.fama,relacion:c.relacion,emoji:c.emoji||"",color:c.color});render()});
+  main.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{read();const c=base.find(x=>x.id===b.dataset.add);if(c&&t.personajes.length<8)t.personajes.push(copiaChar(c));render()});
   if($("qcn")) $("qcn").onclick=()=>{v.nuevo=false;again()};
   if($("qok")) $("qok").onclick=()=>{const n=$("qn").value.trim();if(!n)return toast("Ponle nombre al personaje.");read();
     t.personajes.push({nombre:n,usuario:n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9._]/g,"")||"user",bio:$("qb").value.trim(),personalidad:$("qp").value.trim()||"amigable y natural",fama:500,relacion:$("qr").value,emoji:$("qe").value.trim(),color:COLORS[t.personajes.length%COLORS.length]});
