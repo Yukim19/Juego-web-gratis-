@@ -141,7 +141,7 @@ nav button.on svg{stroke:var(--accent)}
   <header><div class="logo row" style="gap:8px"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c8a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#fg)"/><path d="M16 5c1 5.5 5.5 10 11 11-5.5 1-10 5.5-11 11-1-5.5-5.5-10-11-11 5.5-1 10-5.5 11-11z" fill="#fff"/><circle cx="25" cy="7" r="1.8" fill="#fff" opacity=".85"/></svg><span class="wm">fama<i>.</i></span></div><div class="hstats" id="hs"></div></header>
   <main id="main"><div class="card muted">Cargando…</div></main>
   <nav id="nav" class="hidden"><div class="in">
-    <button data-v="feed" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Feed</button>
+    <button data-v="feed" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Publicar</button>
     <button data-v="seguidores"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.8a3.4 3.4 0 010 6.4M18 14.8c2 .6 3.3 2.2 3.6 5"/></svg>Seguidores</button>
     <button data-v="mensajes"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Mensajes</button>
     <button data-v="planes"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Planes</button>
@@ -165,6 +165,9 @@ const ESCENARIOS=[
  ["🕵️","Detective","Resuelves misterios y publicas pistas en tiempo real"]];
 const RELACIONES=["amigos","mejores amigos","rivales","mentor","compañeros de equipo","familia","fan número 1","némesis","crush","pareja","ex"];
 const ROMANCE="Se permite romance suave y sano (flirteo, crushes, citas, celos, parejas), siempre apto 13+: nunca contenido sexual ni explícito.";
+const MADURO="MODO ADULTO (+18) activado por el usuario, que confirmó ser mayor de edad: se permiten lenguaje fuerte y groserías, temas oscuros, humor negro, violencia no gráfica, drama intenso y romance apasionado con tensión y besos; las escenas íntimas solo se insinúan (fundido a negro). NUNCA contenido sexual explícito, ni menores de edad en ningún contexto romántico, ni personas reales.";
+const reglas=()=>R&&R.maduro?MADURO:ROMANCE;
+const EDAD=()=>R&&R.maduro?"para mayores de 18":"apto 13+";
 const ACTIVIDADES=["Ir a la playa","Grabar un TikTok juntos","Ir a un concierto","Estudiar juntos","Hacer un live","Cocinar juntos","Ir de compras","Jugar videojuegos","Viaje de fin de semana","Colaboración en un post"];
 const LOCURA=["Realista","Un poco loco","Dramático","Caótico","Locura total"];
 const LOGROS=[
@@ -203,7 +206,7 @@ function nextToast(){const t=toastQ.shift();if(!t){toastOn=false;return}toastOn=
   const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);
   setTimeout(()=>{d.remove();nextToast()},toastQ.length?1800:3000)}
 const charById=id=>S.chars.find(c=>c.id===id);
-const MUNDO0="Juego de simulación de red social en español (tono latino/boricua, apto 13+, todo ficticio y original: nada de personas reales ni personajes con derechos de autor). "+ROMANCE;
+const mundo0=()=>`Juego de simulación de red social en español (tono latino/boricua, ${EDAD()}, todo ficticio y original: nada de personas reales ni personajes con derechos de autor). ${reglas()}`;
 const uh=u=>esc(String(u||"").replace(/^@+/,""));
 const nivel=()=>Math.floor(Math.sqrt((S.stats.xp||0)/40))+1;
 const relTxt=a=>a>=85?"💞":a>=65?"😊":a>=40?"🙂":a>=20?"😬":"😤";
@@ -309,7 +312,7 @@ function aiError(e){
 }
 function mundo(){
   const y=S.yo;
-  return `Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni explícito; ${ROMANCE} Sin personas reales ni personajes con derechos de autor: todo es ficticio y original).
+  return `Juego de simulación de red social en español (tono latino/boricua, ${EDAD()}, nada sexual ni explícito; ${reglas()} Sin personas reales ni personajes con derechos de autor: todo es ficticio y original).
 Jugador: ${y.name} (@${y.handle}). Bio: "${y.bio}". Escenario: ${y.escenario}. Fandoms: ${y.fandoms.join(", ")}. Nivel de locura del mundo: ${LOCURA[y.locura-1]} (${y.locura}/5).
 Stats: ${fmt(S.stats.seguidores)} seguidores, nivel ${nivel()}, humor ${S.stats.humor}/100, aura ${S.stats.aura}/100, drama ${S.stats.drama}/100${S.cancelado?". ¡ESTÁ CANCELADO! La gente está molesta con él/ella.":""}.${S.meta&&!S.meta.cumplida?`\nMETA del jugador en este mundo: "${S.meta.texto}" (progreso ${S.meta.progreso}/100). Si sus acciones la acercan o alejan, refléjalo en "progresoMeta" (entero de -10 a 25; 0 si no tiene relación).`:""}`;
 }
@@ -351,7 +354,7 @@ function applyStats(r){
 
 // ---------- render ----------
 function header(){
-  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span><button class="btn alt sm" id="hm" title="Mis mundos">🏠</button>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span><button class="btn alt sm" id="hs2" title="Ajustes">⚙️</button>`;
+  $("hs").innerHTML=S?`<span>👥 <b>${fmt(S.stats.seguidores)}</b></span><span>Nv <b>${nivel()}</b></span><button class="btn alt sm" id="hm" title="Ir al inicio">🏠 Inicio</button>`:`<span style="color:var(--ok);font-weight:600">100% gratis</span><button class="btn alt sm" id="hs2" title="Ajustes">⚙️</button>`;
   if(!S&&$("hs2")) $("hs2").onclick=()=>{ajView=true;plView=null;charForm=null;arcoView=null;render();window.scrollTo(0,0)};
   if(S&&$("hm")) $("hm").onclick=()=>{if(!busy)salirMundo()};
   const unread=S?Object.values(S.unread||{}).reduce((a,b)=>a+b,0):0;
@@ -365,7 +368,7 @@ function render(){
     if(plView) return renderPlantillas();
     if(charForm) return renderCharForm();
     if(arcoView) return arcoView.m==="edit"?renderArcoEdit():renderArcoPlay();
-    if(setup||(!Object.keys(R.worlds).length&&!R.inicio)) return renderSetup();
+    if(setup) return renderSetup();
     return renderHome();
   }
   if(view==="perfil"&&plView) return renderPlantillas();
@@ -412,7 +415,7 @@ function renderSetup(){
       try{
         if(setup.plantilla&&setup.plantilla.personajes.length){setup.cands=setup.plantilla.personajes.slice(0,8).map((c,i)=>newChar(c,i));setup.paso=3;render();return}
         const esc2=setup.escenario||setup.custom;
-        const r=await ai(`Juego de simulación de red social en español (tono latino, apto 13+, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor). ${ROMANCE}
+        const r=await ai(`Juego de simulación de red social en español (tono latino, ${EDAD()}, todo ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor). ${reglas()}
 Jugador: ${setup.name} (@${setup.handle}). Bio: "${setup.bio}". Escenario: ${esc2}. Fandoms: ${fandoms.join(", ")}. Locura del mundo: ${LOCURA[setup.locura-1]}.
 Crea 6 personajes originales que encajen en este mundo y fandoms, muy distintos entre sí (ej. fan obsesionado, crítico sarcástico, alguien tierno, celebridad del fandom, rival, alguien misterioso). Asigna a cada uno la relación inicial que tendría con el jugador.
 Responde SOLO JSON: {"personajes":[{"nombre":"","usuario":"","bio":"una línea","personalidad":"rasgos y forma de hablar","fama":entero 200-5000000,"relacion":"una de: ${RELACIONES.join(", ")}"}]}`);
@@ -566,8 +569,8 @@ function renderCharForm(){
     S.chars=S.chars.filter(c=>c.id!==f.id);charForm=null;save();toast("Personaje borrado");render()};
   $("cai").onclick=async()=>{read(); if(!f.nombre&&!f.bio&&!f.personalidad) return toast("Escribe al menos un nombre o una idea.");
     $("cai").disabled=true;$("ctp").classList.remove("hidden");
-    try{const x=await ai(`${S?mundo():MUNDO0}
-El jugador está creando un personaje original (ficticio, apto 13+). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}", género="${f.genero}", descripciones adicionales="${f.extra}". Completa lo que falte y no cambies lo que ya está escrito.
+    try{const x=await ai(`${S?mundo():mundo0()}
+El jugador está creando un personaje original (ficticio, ${EDAD()}). Lo que ya escribió: nombre="${f.nombre}", usuario="${f.usuario}", bio="${f.bio}", personalidad="${f.personalidad}", género="${f.genero}", descripciones adicionales="${f.extra}". Completa lo que falte y no cambies lo que ya está escrito.
 Responde SOLO JSON: {"nombre":"","usuario":"sin @ ni espacios","bio":"una línea","personalidad":"rasgos y forma de hablar"}`);
       if(!f.nombre&&x.nombre)f.nombre=String(x.nombre).slice(0,40); if(!f.usuario&&x.usuario)f.usuario=String(x.usuario).replace(/^@+/,"").replace(/\s/g,"").slice(0,30);
       if(!f.bio&&x.bio)f.bio=String(x.bio).slice(0,120); if(!f.personalidad&&x.personalidad)f.personalidad=String(x.personalidad).slice(0,300);
@@ -635,7 +638,7 @@ async function pokeDM(){
   const c=[...S.chars].sort(()=>Math.random()-.5).sort((a,b)=>b.afinidad-a.afinidad+(Math.random()*40-20))[0];
   try{
     const r=await ai(`${mundo()}\nEres ${c.nombre} (@${c.usuario}). ${c.bio}. Personalidad: ${c.personalidad}.${c.extra?" Detalles: "+c.extra+".":""}${c.genero?" Género: "+c.genero+".":""} Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}. Último post de ${S.yo.name}: "${S.feed.find(p=>p.tipo==="mio")?.texto||"nada"}".
-Escríbele TÚ PRIMERO un mensaje directo por tu cuenta (chisme, una pregunta, un plan, una queja, un meme…), corto y con tu voz, apto 13+. Responde SOLO JSON: {"texto":""}`);
+Escríbele TÚ PRIMERO un mensaje directo por tu cuenta (chisme, una pregunta, un plan, una queja, un meme…), corto y con tu voz, ${EDAD()}. Responde SOLO JSON: {"texto":""}`);
     (S.chats[c.id]=S.chats[c.id]||[]).push({yo:false,texto:r.texto||"👀"}); S.unread[c.id]=(S.unread[c.id]||0)+1; save(); toast(`💬 ${c.nombre} te escribió`);
   }catch(e){aiError(e)}
   busy=false; render();
@@ -648,7 +651,7 @@ async function sendDM(c,texto){
   try{
     const r=await ai(`${mundo()}
 Eres ${c.nombre} (@${c.usuario}). Bio: ${c.bio}. Personalidad y forma de hablar: ${c.personalidad}.${c.extra?" Detalles: "+c.extra+".":""}${c.genero?" Género: "+c.genero+".":""} Relación con ${S.yo.name}: ${c.relacion}, afinidad ${c.afinidad}/100. Lo que recuerdas: ${(c.memoria||[]).join("; ")||"nada aún"}.
-Mensajes directos (tono de chat, corto, emojis ok, apto 13+, nunca romántico ni sexual):
+Mensajes directos (tono de chat, corto, emojis ok, ${EDAD()}):
 ${hist}
 Responde como ${c.nombre}. Si aprendes algo importante del jugador, ponlo en "recuerdo". Responde SOLO JSON: {"respuesta":"","delta":0,"recuerdo":""}`);
     S.chats[c.id].push({yo:false,texto:r.respuesta||"…"});
@@ -683,7 +686,7 @@ async function doPlan(p){
   try{
     const r=await ai(`${mundo()}
 ${charLine(c)}
-${S.yo.name} y ${c.nombre} hacen este plan: "${p.actividad}". Narra en 3-5 oraciones qué pasó (con sorpresa o giro según la locura del mundo, divertido, apto 13+). Luego ${c.nombre} publica un post sobre el plan. Si alguna cuenta de noticias se entera, opcional.
+${S.yo.name} y ${c.nombre} hacen este plan: "${p.actividad}". Narra en 3-5 oraciones qué pasó (con sorpresa o giro según la locura del mundo, divertido, ${EDAD()}). Luego ${c.nombre} publica un post sobre el plan. Si alguna cuenta de noticias se entera, opcional.
 Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguidores":0,"afinidad":entre -5 y 15,"humor":0,"aura":0,"drama":0,"progresoMeta":0,"recuerdo":"","postsSobreTi":[]}`);
     p.estado="hecho"; p.resultado=r.historia||"Fue un buen día.";
     c.afinidad=clamp(c.afinidad+clamp(num(r.afinidad,5),-5,15),0,100);
@@ -719,6 +722,10 @@ function renderAjustes(){
   <p class="muted" style="margin:14px 0 6px">Juego</p>
   <div class="card"><div class="row" style="justify-content:space-between"><span>Idioma</span><span class="muted">Español</span></div><div class="row" style="justify-content:space-between;margin-top:12px"><span>La IA corre en</span><span class="muted">${ia}</span></div>
   <p class="muted" style="margin:12px 0 0">Sin energía, sin gemas, sin anuncios y sin suscripción: fama. es 100% gratis.</p></div>
+  <p class="muted" style="margin:14px 0 6px">Contenido</p>
+  <div class="card"><div class="row" style="justify-content:space-between"><b>Modo adulto (+18)</b><span class="muted">${R.maduro?"Activado":"Desactivado"}</span></div>
+  <p class="muted" style="margin:8px 0">Permite lenguaje fuerte, temas oscuros, humor negro y romance intenso. Las escenas íntimas solo se insinúan: <b>no incluye contenido sexual explícito</b>.</p>
+  ${R.maduro?`<button class="btn alt sm" id="jad">Desactivar</button>`:`<div id="jag" class="hidden"><label class="row" style="margin:8px 0;color:var(--txt)"><input id="jch" type="checkbox" style="width:auto"> <span>Confirmo que tengo 18 años o más</span></label><button class="btn sm" id="jok2">Activar modo adulto</button></div><button class="btn alt sm" id="jad">Activar…</button>`}</div>
   <p class="muted" style="margin:14px 0 6px">Copia de seguridad</p>
   <div class="card"><p class="muted" style="margin-top:0">Tu partida se guarda en este navegador${typeof claude!=="undefined"?" y en tu cuenta de Claude":""}. Copia el texto para guardarlo o pasarlo a otro dispositivo.</p>
   <div class="row"><button class="btn alt sm" id="jcp">📋 Copiar mi partida</button><button class="btn alt sm" id="jrs">Restaurar</button></div>
@@ -727,6 +734,8 @@ function renderAjustes(){
   <div class="card"><button class="btn alt" id="jdl" style="color:var(--bad)">🗑 Borrar todos mis datos</button><p class="muted" style="margin:10px 0 0">Borra mundos, plantillas, arcos y personajes de este dispositivo.</p></div>
   <p class="muted" style="text-align:center;margin-top:18px">fama. · versión 3</p>`;
   $("jbk").onclick=()=>{R.nombre=$("jnm").value.trim();ajView=false;save();render()};
+  $("jad").onclick=()=>{if(R.maduro){R.maduro=false;save();toast("Modo adulto desactivado");render()}else $("jag").classList.toggle("hidden")};
+  if($("jok2")) $("jok2").onclick=()=>{if(!$("jch").checked)return toast("Marca la casilla para confirmar tu edad.");R.maduro=true;save();toast("Modo adulto activado");render()};
   $("jps").onclick=()=>{R.nombre=$("jnm").value.trim();ajView=false;homeTab="personajes";save();render()};
   $("jnm").onchange=()=>{R.nombre=$("jnm").value.trim();save()};
   $("jcp").onclick=async()=>{const t=JSON.stringify(R);let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){}
@@ -748,7 +757,7 @@ function renderHome(){
       return `<div class="card">${portadaHTML({portada:w.portada,emoji:w.emoji,color:w.color},90)}<div class="name" style="margin-top:8px">${esc(w.titulo||"Mi mundo")}</div>
       <div class="handle">${esc(e.yo.name)} · 👥 ${fmt(e.stats.seguidores)} · Nv ${Math.floor(Math.sqrt((e.stats.xp||0)/40))+1}</div>
       ${m?`<div class="muted" style="margin-top:4px">🎯 ${esc(m.texto)} ${m.cumplida?"✅":m.progreso+"/100"}</div>`:""}
-      <div class="row" style="margin-top:10px"><button class="btn sm" data-open="${w.id}" style="flex:1">▶ Jugar</button><button class="btn alt sm" data-wdel="${w.id}">🗑</button></div></div>`}).join("")+`</div>`:`<div class="card"><p class="muted">Todavía no tienes mundos. Toca ＋ Crear para empezar uno.</p></div>`)+
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-open="${w.id}" style="flex:1">▶ Jugar</button><button class="btn alt sm" data-wdel="${w.id}">🗑</button></div></div>`}).join("")+`</div>`:`<div class="card"><h3>Bienvenid@ a fama.</h3><p class="muted">Crea tu primer mundo: escoge un escenario, inventa tu persona y empieza a publicar con personajes con IA.</p><button class="btn" id="firstw" style="width:100%">🎭 Crear mi primer mundo</button></div>`)+
     `<div class="row sec" style="margin-top:8px"><h2 style="margin:14px 0 12px">Plantillas</h2><button class="link" id="hp">Ver todo</button></div>`+
     (R.plantillas.length?`<div class="hscroll">${R.plantillas.map(t=>`<div class="card">${portadaHTML(t,100)}<div class="name" style="margin-top:8px">${esc(t.titulo)}</div><div class="handle">${esc(t.fandom||"")} · ${t.personajes.length} personajes</div><div class="row" style="margin-top:10px"><button class="btn sm" data-hplay="${t.id}" style="flex:1">▶ Jugar</button></div></div>`).join("")}</div>`:`<div class="card"><p class="muted">No tienes plantillas. Crea una con ＋ Crear.</p></div>`);
   } else if(homeTab==="arcos"){
@@ -777,6 +786,7 @@ function renderHome(){
   }
   main.innerHTML=h+`<button class="fab" id="fab">＋ Crear</button>`;
   $("fab").onclick=abrirCrear;
+  if($("firstw")) $("firstw").onclick=crearMundo;
   if($("pedit")) $("pedit").onclick=()=>{perfEdit=true;render()};
   if($("paj")) $("paj").onclick=()=>{ajView=true;render();window.scrollTo(0,0)};
   if($("pvt")) $("pvt").onclick=()=>{homeTab="personajes";render()};
@@ -824,7 +834,7 @@ function renderArcoEdit(){
   if($("adl")) $("adl").onclick=()=>{if($("adl").dataset.ok!=="1"){$("adl").dataset.ok="1";$("adl").textContent="¿Seguro? Toca otra vez";return}R.arcos=R.arcos.filter(x=>x.id!==a.id);delete R.arcoProg[a.id];arcoView=null;save();render()};
   $("aai").onclick=async()=>{read();if(!a.titulo&&!a.premisa)return toast("Escribe al menos un título o una idea.");
     $("aai").disabled=true;$("atp").classList.remove("hidden");
-    try{const x=await ai(`${MUNDO0}
+    try{const x=await ai(`${mundo0()}
 El jugador está creando un ARCO: una historia interactiva con escenas, decisiones y varios finales. Lo que ya escribió: título="${a.titulo}", premisa="${a.premisa}", personajes="${a.personajes}", finales=${JSON.stringify(a.finales)}. Completa lo que falte sin cambiar lo escrito. Debe haber ${Math.max(2,a.finales.length)} finales (máx 4) claramente distintos según las decisiones del jugador.
 Responde SOLO JSON: {"titulo":"","premisa":"3-5 oraciones","personajes":"Nombre — cómo es, uno por línea (3 personajes)","finales":[{"titulo":"","cond":"qué debe pasar para llegar a este final"}]}`);
       if(!a.titulo&&x.titulo)a.titulo=String(x.titulo).slice(0,60);if(!a.premisa&&x.premisa)a.premisa=String(x.premisa).slice(0,1000);if(!a.personajes&&x.personajes)a.personajes=String(x.personajes).slice(0,800);
@@ -844,7 +854,7 @@ async function arcoTurno(a,eleccion){
   render();
   try{
     const n=A.hist.length+1, ult=n>=a.escenas;
-    const r=await ai(`${MUNDO0}
+    const r=await ai(`${mundo0()}
 Historia interactiva (un "arco") llamada "${a.titulo}". Premisa: ${a.premisa}
 Personajes: ${a.personajes||"inventa los que necesites (originales)"}.
 Protagonista: ${A.nombre}; háblale en segunda persona ("tú").
@@ -975,7 +985,7 @@ function renderPlantillas(){
     v.nuevo=false;render()};
   $("pai").onclick=async()=>{read();if(!t.titulo&&!t.fandom&&!t.descripcion)return toast("Escribe al menos un título o un fandom.");
     $("pai").disabled=true;$("ptp").classList.remove("hidden");
-    try{const x=await ai(`Juego de simulación de red social en español (tono latino/boricua, apto 13+, nada sexual ni explícito; ${ROMANCE}). Todo debe ser ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor, aunque el fandom se inspire en un género.
+    try{const x=await ai(`Juego de simulación de red social en español (tono latino/boricua, ${EDAD()}, nada sexual ni explícito; ${reglas()}). Todo debe ser ficticio y ORIGINAL: nada de personas reales ni personajes con derechos de autor, aunque el fandom se inspire en un género.
 El jugador está creando una plantilla de mundo. Lo que ya escribió: título="${t.titulo}", fandom="${t.fandom}", descripción="${t.descripcion}", meta="${t.meta}". Completa lo que falte sin cambiar lo escrito.
 Personajes que ya tiene: ${t.personajes.map(p=>p.nombre).join(", ")||"ninguno"}. Propón ${Math.max(0,Math.min(5,8-t.personajes.length))} personajes originales nuevos, muy distintos entre sí, que encajen en el mundo.
 Responde SOLO JSON: {"titulo":"","fandom":"","descripcion":"2-4 oraciones","meta":"máx 150 caracteres","personajes":[{"nombre":"","usuario":"","bio":"una línea","personalidad":"rasgos y forma de hablar","fama":entero 200-5000000,"relacion":"una de: ${RELACIONES.join(", ")}"}]}`);

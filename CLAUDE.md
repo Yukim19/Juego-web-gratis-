@@ -43,6 +43,8 @@ Está publicado como un artifact de claude.ai. Las funciones de IA y de guardado
 - **Diseño**: tema gris oscuro con acento azul, fuente Plus Jakarta Sans, botones en píldora, barra inferior con iconos SVG, inicio con filas horizontales (mundos y plantillas), botón flotante ＋ Crear con menú inferior. Estilo inspirado en la app de referencia, sin copiar su logo, arte ni textos (el logo y el nombre son propios).
 - **Perfil general** (Inicio → Perfil: foto y nombre, cantidades, biblioteca) y **Ajustes** (⚙️ en el header del inicio): nombre, copia de seguridad (copiar/restaurar la partida como texto), borrar todos los datos. El perfil de cada mundo tiene encabezado grande, carrusel de personajes y botón "Editar perfil y escenario".
 - **Romance suave**: relaciones "crush", "pareja" y "ex", y el campo `pareja` del personaje (ninguna, el jugador o otro personaje; es recíproco entre personajes). La regla de contenido está en la constante `ROMANCE` de `index.html` y se agrega a los prompts.
+- **Pantalla principal = Inicio** (mundos, arcos, personajes, perfil). Dentro de un mundo, la pestaña del feed se llama "Publicar" y el botón 🏠 Inicio del header vuelve al inicio.
+- **Modo adulto (+18)** opcional (Ajustes → Contenido, con confirmación de edad): lenguaje fuerte, temas oscuros y romance intenso; las escenas íntimas solo se insinúan. Nunca contenido sexual explícito ni menores en contextos románticos. Las reglas viven en `ROMANCE`/`MADURO`/`reglas()`/`EDAD()`.
 - Los ejemplos iniciales (2 plantillas y 1 arco) se siembran en `nuevoR()`.
 
 ### Estructura del estado
