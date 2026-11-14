@@ -40,6 +40,7 @@ Está publicado como un artifact de claude.ai. Las funciones de IA y de guardado
 - **Biblioteca de personajes** global (`R.lib`): se crean en Inicio → Personajes, se guardan desde un mundo con 📚 y se traen con 📥 (Seguidores) o desde el editor de plantillas.
 - **Arcos**: historias con N escenas (3-8), 3 opciones por escena (o texto libre) y 2-4 finales; la IA escribe cada escena y cierra con el final que corresponde. Se llevan los finales descubiertos.
 - Formulario de personaje (como en Status): foto (se recorta a 160px), nombre, usuario, género, bio, personalidad, "descripciones adicionales" (`extra`, influye en la IA), seguidores con atajos 1K–100K o personalizado, emoji y color. Campos del personaje: ver `CAMPOS` en `index.html`.
+- **Diseño**: tema gris oscuro con acento azul, fuente Plus Jakarta Sans, botones en píldora, barra inferior con iconos SVG, inicio con filas horizontales (mundos y plantillas), botón flotante ＋ Crear con menú inferior. Estilo inspirado en la app de referencia, sin copiar su logo, arte ni textos (el logo y el nombre son propios).
 - Los ejemplos iniciales (2 plantillas y 1 arco) se siembran en `nuevoR()`.
 
 ### Estructura del estado

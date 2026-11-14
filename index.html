@@ -6,33 +6,33 @@
 <title>fama – red social con personajes IA</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ff5c8a%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%237c5cff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%229%22%20fill%3D%22url%28%23g%29%22/%3E%3Cpath%20d%3D%22M16%205c1%205.5%205.5%2010%2011%2011-5.5%201-10%205.5-11%2011-1-5.5-5.5-10-11-11%205.5-1%2010-5.5%2011-11z%22%20fill%3D%22%23fff%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0d14;--panel:#1a1722;--panel2:#231f2e;--line:#2f2a3d;--txt:#f2eef9;--muted:#9a93ab;--accent:#ff5c8a;--accent2:#7c5cff;--ok:#3ddc97;--warn:#ffb547;--bad:#ff4d4d}
+:root{--bg:#151517;--panel:#202024;--panel2:#2a2a30;--line:#34343b;--txt:#f4f4f6;--muted:#8d8d97;--accent:#4a9df5;--accent2:#7c5cff;--ok:#3ddc97;--warn:#ffb547;--bad:#ff4d4d}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;font-size:15px}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:15px}
 body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 .app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 header{position:sticky;top:0;z-index:5;background:rgba(15,13,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px}
-.logo{font-family:"Space Grotesk";font-weight:700;font-size:22px;letter-spacing:-.5px}
+.logo{font-family:"Plus Jakarta Sans";font-weight:700;font-size:22px;letter-spacing:-.5px}
 .logo .wm{color:var(--txt)}.logo i{font-style:normal;color:var(--accent)}.logo .mark{display:block}
 .hstats{margin-left:auto;display:flex;gap:10px;font-size:12px;color:var(--muted)}
 .hstats b{color:var(--txt)}
 main{flex:1;padding:12px 14px 96px}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:6}
 nav .in{display:flex;max-width:560px;width:100%}
-nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 0;font:600 11px Inter;cursor:pointer;position:relative}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:10px 0;font:600 11px "Plus Jakarta Sans";cursor:pointer;position:relative}
 nav button.on{color:var(--accent)}
 nav button b{display:block;font-size:19px;margin-bottom:2px}
 nav .dot{position:absolute;top:6px;right:calc(50% - 18px);background:var(--accent);color:#fff;border-radius:99px;font-size:10px;padding:1px 5px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
-h2{font-family:"Space Grotesk";margin:4px 0 10px;font-size:20px}
-h3{font-family:"Space Grotesk";margin:0 0 8px;font-size:16px}
+h2{font-family:"Plus Jakarta Sans";margin:4px 0 10px;font-size:20px}
+h3{font-family:"Plus Jakarta Sans";margin:0 0 8px;font-size:16px}
 label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font:inherit}
 input[type=range]{padding:0;accent-color:var(--accent)}
 textarea{resize:vertical;min-height:70px}
-.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:600 14px Inter;cursor:pointer;white-space:nowrap}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:600 14px "Plus Jakarta Sans";cursor:pointer;white-space:nowrap}
 .btn.alt{background:var(--panel2);border:1px solid var(--line)}
 .btn.sm{padding:6px 10px;font-size:12px}
 .btn:disabled{opacity:.5;cursor:default}
@@ -51,7 +51,7 @@ textarea{resize:vertical;min-height:70px}
 .reply .body{margin:4px 0}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .stats div{background:var(--panel2);border-radius:12px;padding:10px 4px}
-.stats b{display:block;font-size:20px;font-family:"Space Grotesk"}
+.stats b{display:block;font-size:20px;font-family:"Plus Jakarta Sans"}
 .stats span{font-size:11px;color:var(--muted)}
 .bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:4px 0 10px}
 .bar i{display:block;height:100%;border-radius:99px}
@@ -74,6 +74,50 @@ textarea{resize:vertical;min-height:70px}
 .logro:last-child{border:0}
 .logro.off{opacity:.35}
 .hidden{display:none}
+
+/* ---- look inspirado en apps de redes tipo "plantillas": gris oscuro, acento azul, píldoras ---- */
+header{background:rgba(21,21,23,.94);border-bottom:0;padding:12px 16px}
+.logo{font-size:24px;font-weight:800;letter-spacing:-.8px}
+.hstats span{background:var(--panel);border-radius:99px;padding:6px 12px;font-weight:600}
+main{padding:6px 16px 110px}
+h2{font-size:22px;font-weight:800;letter-spacing:-.4px;margin:14px 0 12px}
+h3{font-weight:700}
+.card{border-radius:20px;border:1px solid var(--line);padding:16px}
+.btn{border-radius:99px;padding:12px 20px;font-weight:700;font-size:14px}
+.btn.alt{background:var(--panel2);border:0}
+.btn.sm{padding:8px 14px;font-size:12.5px}
+input,textarea,select{border-radius:16px;padding:13px 14px;background:var(--panel2);border:1px solid var(--line)}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent)}
+label{font-weight:600;color:#b9b9c2;margin:14px 0 6px}
+.chip{background:var(--panel2);border:0;padding:9px 15px;font-weight:600;color:var(--txt)}
+.chip.on{background:var(--accent);color:#fff}
+.pick{border-radius:18px;background:var(--panel);padding:14px 16px}
+.pick.on{border-color:var(--accent);background:#1c2a3b}
+.viral{background:#1c2a3b;color:var(--accent)}
+.msg.me{background:var(--accent);color:#fff}
+.stats div{background:var(--panel2);border-radius:16px}
+.bar i{border-radius:99px}
+.av{border-radius:50%}
+.notice{background:#1c2a3b;border-color:#2b4262;color:#b9d6f7}
+nav{background:rgba(27,27,30,.97);border-top:1px solid var(--line)}
+nav button{padding:10px 0 8px;font-size:10.5px;font-weight:600}
+nav button svg{display:block;margin:0 auto 3px;width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:#fff}
+nav button.on svg{stroke:var(--accent)}
+.hscroll{display:flex;gap:12px;overflow-x:auto;padding:2px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px;scroll-snap-type:x proximity;scroll-padding-left:16px;-webkit-overflow-scrolling:touch}
+.hscroll>.card{flex:0 0 78%;max-width:300px;margin:0;scroll-snap-align:start}
+.row.sec{justify-content:space-between;align-items:baseline}
+.link{color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;background:none;border:0;padding:0;font-family:inherit}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(20px,calc(env(safe-area-inset-bottom,0px) + 14px));z-index:7;background:var(--panel2);color:#fff;border:1px solid var(--line);border-radius:99px;padding:15px 24px;font:700 17px "Plus Jakarta Sans";box-shadow:0 8px 28px rgba(0,0,0,.5);cursor:pointer}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;background:var(--panel);border-radius:28px 28px 0 0;padding:14px 16px calc(24px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:#4a4a52;margin:0 auto 16px}
+.sheet h3{font-size:20px;font-weight:800;margin:0 0 14px}
+.sheet .opt{background:var(--panel2);border-radius:20px;padding:16px 18px;margin-bottom:10px;cursor:pointer}
+.sheet .opt b{display:block;font-size:17px;font-weight:700;margin-bottom:3px}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin:4px -16px 8px;padding:0 16px}
+.tabs div{padding:12px 0;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs div.on{color:var(--txt);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -81,11 +125,11 @@ textarea{resize:vertical;min-height:70px}
   <header><div class="logo row" style="gap:8px"><svg class="mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5c8a"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#fg)"/><path d="M16 5c1 5.5 5.5 10 11 11-5.5 1-10 5.5-11 11-1-5.5-5.5-10-11-11 5.5-1 10-5.5 11-11z" fill="#fff"/><circle cx="25" cy="7" r="1.8" fill="#fff" opacity=".85"/></svg><span class="wm">fama<i>.</i></span></div><div class="hstats" id="hs"></div></header>
   <main id="main"><div class="card muted">Cargando…</div></main>
   <nav id="nav" class="hidden"><div class="in">
-    <button data-v="feed" class="on"><b>🏠</b>Inicio</button>
-    <button data-v="seguidores"><b>👥</b>Seguidores</button>
-    <button data-v="mensajes"><b>💬</b>Mensajes</button>
-    <button data-v="planes"><b>📅</b>Planes</button>
-    <button data-v="perfil"><b>⭐</b>Perfil</button>
+    <button data-v="feed" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Feed</button>
+    <button data-v="seguidores"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.8a3.4 3.4 0 010 6.4M18 14.8c2 .6 3.3 2.2 3.6 5"/></svg>Seguidores</button>
+    <button data-v="mensajes"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Mensajes</button>
+    <button data-v="planes"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Planes</button>
+    <button data-v="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4.2 4-6.5 8-6.5s7.3 2.3 8 6.5"/></svg>Perfil</button>
   </div></nav>
 </div>
 <script>
@@ -629,19 +673,30 @@ Responde SOLO JSON: {"historia":"","postDelPersonaje":"","likes":0,"nuevosSeguid
 
 // ---------- inicio: mundos, arcos, personajes ----------
 let homeTab="mundos", arcoView=null, arcoBusy=false;
+const crearMundo=()=>{setup=nuevoSetup();render();window.scrollTo(0,0)};
+const crearPlantilla=()=>{if(R.plantillas.length>=12)return toast("Máximo 12 plantillas. Borra alguna.");plView={m:"edit",t:{id:null,titulo:"",fandom:"",descripcion:"",meta:"",portada:"",emoji:"🌎",color:COLORS[R.plantillas.length%COLORS.length],personajes:[]},nuevo:false};render();window.scrollTo(0,0)};
+const crearArco=()=>{arcoView={m:"edit",a:{id:null,titulo:"",emoji:"📖",color:COLORS[R.arcos.length%COLORS.length],premisa:"",personajes:"",escenas:5,finales:[{titulo:"",cond:""},{titulo:"",cond:""}]}};render();window.scrollTo(0,0)};
+const crearPersonajeLib=()=>{charForm={lib:true,id:null,...formVacio(R.lib.length)};render();window.scrollTo(0,0)};
+function abrirCrear(){
+  const ops=[["🎭 Jugar un mundo nuevo","Escoge un escenario, crea tu persona y empieza desde cero.",crearMundo],["🌎 Crear plantilla","Un mundo con universo, meta y hasta 8 personajes.",crearPlantilla],["📖 Crear un arco","Historias con escenas, decisiones y varios finales.",crearArco],["👥 Crear personaje","Añádelo a tu biblioteca para usarlo en cualquier mundo.",crearPersonajeLib]];
+  const bg=document.createElement("div");bg.className="sheet-bg";
+  bg.innerHTML=`<div class="sheet"><div class="grab"></div><h3>¿Qué quieres hacer?</h3>${ops.map((o,i)=>`<div class="opt" data-o="${i}"><b>${o[0]}</b><span class="muted">${o[1]}</span></div>`).join("")}</div>`;
+  bg.onclick=e=>{if(e.target===bg)bg.remove()};
+  bg.querySelectorAll("[data-o]").forEach(el=>el.onclick=()=>{bg.remove();ops[+el.dataset.o][2]()});
+  document.body.appendChild(bg);
+}
 function renderHome(){
   const ws=Object.values(R.worlds).sort((a,b)=>b.t-a.t);
   const tabs=[["mundos","🌎 Mundos"],["arcos","📖 Arcos"],["personajes","👥 Personajes"]];
-  let h=`<div class="chips" style="margin-bottom:14px">${tabs.map(([k,l])=>`<div class="chip${homeTab===k?" on":""}" data-tab="${k}">${l}</div>`).join("")}</div>`;
+  let h=`<div class="tabs">${tabs.map(([k,l])=>`<div class="${homeTab===k?"on":""}" data-tab="${k}">${l}</div>`).join("")}</div>`;
   if(homeTab==="mundos"){
-    h+=`<h2>Seguir jugando</h2>`+(ws.length?ws.map(w=>{const e=w.estado,m=e.meta;
+    h+=`<h2>Seguir jugando</h2>`+(ws.length?`<div class="hscroll">`+ws.map(w=>{const e=w.estado,m=e.meta;
       return `<div class="card">${portadaHTML({portada:w.portada,emoji:w.emoji,color:w.color},90)}<div class="name" style="margin-top:8px">${esc(w.titulo||"Mi mundo")}</div>
       <div class="handle">${esc(e.yo.name)} · 👥 ${fmt(e.stats.seguidores)} · Nv ${Math.floor(Math.sqrt((e.stats.xp||0)/40))+1}</div>
       ${m?`<div class="muted" style="margin-top:4px">🎯 ${esc(m.texto)} ${m.cumplida?"✅":m.progreso+"/100"}</div>`:""}
-      <div class="row" style="margin-top:10px"><button class="btn sm" data-open="${w.id}" style="flex:1">▶ Jugar</button><button class="btn alt sm" data-wdel="${w.id}">🗑</button></div></div>`}).join(""):`<div class="card"><p class="muted">Todavía no tienes mundos. Crea el primero abajo.</p></div>`)+
-    `<h2 style="margin-top:20px">Crear</h2>
-    <div class="card pick" id="hw"><b>🎭 Mundo desde cero</b><div class="muted">Escoge un escenario, crea tu persona y empieza.</div></div>
-    <div class="card pick" id="hp"><b>🌎 Plantillas (${R.plantillas.length})</b><div class="muted">Mundos listos con meta y personajes. Créalas, edítalas o juégalas.</div></div>`;
+      <div class="row" style="margin-top:10px"><button class="btn sm" data-open="${w.id}" style="flex:1">▶ Jugar</button><button class="btn alt sm" data-wdel="${w.id}">🗑</button></div></div>`}).join("")+`</div>`:`<div class="card"><p class="muted">Todavía no tienes mundos. Toca ＋ Crear para empezar uno.</p></div>`)+
+    `<div class="row sec" style="margin-top:8px"><h2 style="margin:14px 0 12px">Plantillas</h2><button class="link" id="hp">Ver todo</button></div>`+
+    (R.plantillas.length?`<div class="hscroll">${R.plantillas.map(t=>`<div class="card">${portadaHTML(t,100)}<div class="name" style="margin-top:8px">${esc(t.titulo)}</div><div class="handle">${esc(t.fandom||"")} · ${t.personajes.length} personajes</div><div class="row" style="margin-top:10px"><button class="btn sm" data-hplay="${t.id}" style="flex:1">▶ Jugar</button></div></div>`).join("")}</div>`:`<div class="card"><p class="muted">No tienes plantillas. Crea una con ＋ Crear.</p></div>`);
   } else if(homeTab==="arcos"){
     h+=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Arcos</h2><button class="btn sm" id="anew">➕ Crear arco</button></div>
     <p class="muted">Historias con escenas, decisiones y varios finales. Descubre todos.</p>`+
@@ -654,16 +709,17 @@ function renderHome(){
     <p class="muted">Tu biblioteca. Puedes traerlos a cualquier mundo (pestaña Seguidores → 📥) o a una plantilla. Solo personajes originales.</p>`+
     (R.lib.length?R.lib.map(c=>`<div class="card row">${av(c.nombre,c.color,0,c.foto||c.emoji)}<div style="flex:1;min-width:0"><div class="name">${esc(c.nombre)}</div><div class="handle">@${uh(c.usuario)}</div><div class="muted">${esc(c.bio)}</div></div><button class="btn alt sm" data-ledit="${c.id}">✏️</button></div>`).join(""):`<div class="card"><p class="muted">Tu biblioteca está vacía. Crea un personaje con ➕, o guarda uno de tus mundos con 📚.</p></div>`);
   }
-  main.innerHTML=h;
+  main.innerHTML=h+`<button class="fab" id="fab">＋ Crear</button>`;
+  $("fab").onclick=abrirCrear;
+  main.querySelectorAll("[data-hplay]").forEach(b=>b.onclick=()=>iniciarPlantilla(R.plantillas.find(x=>x.id===b.dataset.hplay)));
   main.querySelectorAll("[data-tab]").forEach(c=>c.onclick=()=>{homeTab=c.dataset.tab;render()});
   main.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>abrirMundo(b.dataset.open));
   main.querySelectorAll("[data-wdel]").forEach(b=>b.onclick=()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return}delete R.worlds[b.dataset.wdel];save();render()});
-  if($("hw")) $("hw").onclick=()=>{setup=nuevoSetup();render()};
   if($("hp")) $("hp").onclick=()=>{plView={m:"list"};render()};
-  if($("anew")) $("anew").onclick=()=>{arcoView={m:"edit",a:{id:null,titulo:"",emoji:"📖",color:COLORS[R.arcos.length%COLORS.length],premisa:"",personajes:"",escenas:5,finales:[{titulo:"",cond:""},{titulo:"",cond:""}]}};render()};
+  if($("anew")) $("anew").onclick=crearArco;
   main.querySelectorAll("[data-aedit]").forEach(b=>b.onclick=()=>{arcoView={m:"edit",a:JSON.parse(JSON.stringify(R.arcos.find(x=>x.id===b.dataset.aedit)))};render()});
   main.querySelectorAll("[data-aplay]").forEach(b=>b.onclick=()=>{arcoView={m:"play",id:b.dataset.aplay};render();window.scrollTo(0,0)});
-  if($("lnew")) $("lnew").onclick=()=>{charForm={lib:true,id:null,...formVacio(R.lib.length)};render()};
+  if($("lnew")) $("lnew").onclick=crearPersonajeLib;
   main.querySelectorAll("[data-ledit]").forEach(b=>b.onclick=()=>{const c=R.lib.find(x=>x.id===b.dataset.ledit);charForm={lib:true,...formVacio(0),...copiaChar(c),id:c.id};render()});
 }
 
